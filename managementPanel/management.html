@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Till Management Panel</title>
+    <link rel="stylesheet" href="managementStyles.css">
+</head>
+<body>
+
+    <header class="managementHeader">
+        <h1>POS Till & Management Console</h1>
+        <p>Full Control Suite: Menu & Order Databases</p>
+    </header>
+
+    <div class="managementGrid">
+        
+        <section class="managementSection">
+            <h2>Global Menu Creator</h2>
+            <div class="formBox">
+                <h3>Add New Menu Item</h3>
+                <input type="text" id="newItemName" placeholder="Item Name (e.g., Spicy Tacos)" class="formInput">
+                <input type="text" id="newItemDesc" placeholder="Item Description" class="formInput">
+                <button class="actionButton buttonGreen" onclick="submitNewItemToMenu()">Save Item to Database</button>
+            </div>
+            
+            <h3>Current Menu Database</h3>
+            <div id="managementMenuContainer">Loading master list...</div>
+        </section>
+
+        <section class="managementSection">
+            <h2>Manual Order Ring-Up</h2>
+            <div class="formBox">
+                <h3>Create New Till Order</h3>
+                <input type="number" id="manualTableNum" placeholder="Table Number" class="formInput">
+                <p>Select Item to Add:</p>
+                <select id="manualItemSelector" class="formInput"></select>
+                <input type="number" id="manualItemQuantity" placeholder="Quantity" value="1" class="formInput">
+                <input type="text" id="manualItemNotes" placeholder="Special Instructions" class="formInput">
+                <button class="actionButton buttonBlue" onclick="addSelectedToManualCart()">Add to Active Cart</button>
+                
+                <div id="manualCartPreview" class="manualCartPreview">Cart empty.</div>
+                <button class="actionButton buttonGreen" style="width: 100%;" onclick="submitManualCartAsOrder()">Submit Order to Kitchen</button>
+            </div>
+
+            <h2>All System Orders</h2>
+            <div id="managementOrdersContainer">Loading master order logs...</div>
+        </section>
+
+    </div>
+
+    <script src="managementApp.js"></script>
+</body>
+</html>

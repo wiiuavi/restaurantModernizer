@@ -85,11 +85,17 @@ class NewOrderData(BaseModel):
     restaurantId: int
     tableNum: int
     orderedItems: List[OrderItemData]
+    
+class NewItemData(BaseModel):
+    restaurantId: int
+    itemName: str
+    itemDesc: Optional[str] = ""
+    imageUrl: Optional[str] = ""
+    inStock: bool = True
 
 
 @app.get("/api/menu/{restaurantId}")
 def getMenu(restaurantId: int):
-    """Fetches the full menu for a specific restaurant."""
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
     
@@ -193,3 +199,75 @@ def completeOrder(orderId: int):
     dbConn.commit()
     dbConn.close()
     return {"status": "success", "message": "Order marked as completed."}
+
+
+@app.post("/api/item")
+def createMenuItem(itemData: NewItemData):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    
+    dbCursor.execute(
+        """
+        INSERT INTO MenuItems (restaurantId, itemName, itemDesc, imageUrl, inStock)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (itemData.restaurantId, itemData.itemName, itemData.itemDesc, itemData.imageUrl, int(itemData.inStock))
+    )
+    newItemId = dbCursor.lastrowid
+    
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success", "itemId": newItemId}
+
+
+@app.delete("/api/item/{itemId}")
+def deleteMenuItem(itemId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    
+    dbCursor.execute("DELETE FROM MenuItems WHERE itemId = ?", (itemId,))
+    
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success", "message": "Item deleted from database entirely."}
+
+
+@app.get("/api/orders/all/{restaurantId}")
+def getAllOrders(restaurantId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    
+    dbCursor.execute("SELECT * FROM Orders WHERE restaurantId = ? ORDER BY orderId DESC", (restaurantId,))
+    allOrders = dbCursor.fetchall()
+    
+    formattedOrders = []
+    for orderRow in allOrders:
+        orderDict = dict(orderRow)
+        dbCursor.execute(
+            """
+            SELECT OrderItems.quantity, OrderItems.specialNotes, MenuItems.itemName 
+            FROM OrderItems 
+            JOIN MenuItems ON OrderItems.itemId = MenuItems.itemId 
+            WHERE OrderItems.orderId = ?
+            """, 
+            (orderDict["orderId"],)
+        )
+        itemsInOrder = dbCursor.fetchall()
+        orderDict["items"] = [dict(item) for item in itemsInOrder]
+        formattedOrders.append(orderDict)
+        
+    dbConn.close()
+    return formattedOrders
+
+
+@app.delete("/api/order/{orderId}")
+def deleteOrder(orderId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    
+    dbCursor.execute("DELETE FROM Orders WHERE orderId = ?", (orderId,))
+    dbCursor.execute("DELETE FROM OrderItems WHERE orderId = ?", (orderId,))
+    
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success", "message": "Order purged from records."}
