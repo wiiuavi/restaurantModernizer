@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Menu</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="menuHeader">
+        <h1 id="restaurantName">Loading Menu...</h1>
+        <p id="tableDisplay">Table: Detecting...</p>
+    </div>
+
+    <div id="menuGrid" class="menuGrid"></div>
+
+    <div class="cartSection">
+        <h2>Your Order</h2>
+        <div id="cartItemsList"></div>
+        <button id="submitOrderButton" class="submitOrderButton" onclick="sendOrderToServer()">Place Order</button>
+    </div>
+
+    <script src="menuApp.js"></script>
+</body>
+</html>
