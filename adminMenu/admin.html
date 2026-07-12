@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="adminStyles.css">
+</head>
+<body>
+
+    <div id="passwordOverlay" class="passwordOverlay">
+        <div class="loginBox">
+            <h2>Admin Authentication</h2>
+            <input type="password" id="adminPasswordInput" class="adminPasswordInput" placeholder="Enter password...">
+            <button class="loginButton" onclick="verifyAdminPassword()">Unlock Dashboard</button>
+            <p id="errorMessage" class="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="adminDashboardContent" class="adminDashboardContent hiddenView">
+        <header class="adminHeader">
+            <h1>Restaurant Admin Control Panel</h1>
+            <p>Managing System Updates Live</p>
+        </header>
+
+        <div class="dashboardGrid">
+            <section class="dashboardSection">
+                <h2>Menu Availability</h2>
+                <div id="adminMenuContainer">Loading menu items...</div>
+            </section>
+
+            <section class="dashboardSection">
+                <h2>Live Kitchen Queue</h2>
+                <div id="adminQueueContainer">Loading active orders...</div>
+            </section>
+        </div>
+    </div>
+
+    <script src="adminApp.js"></script>
+</body>
+</html>

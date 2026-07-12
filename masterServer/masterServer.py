@@ -5,10 +5,12 @@ from pydantic import BaseModel
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 
+#uvicorn masterServer:app --reload
+
 app = FastAPI(title="MicroSaaS Menu API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allows your local HTML files to access the API
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,7 +68,6 @@ def setupDatabase():
     dbConn.commit()
     dbConn.close()
 
-# Run setup when the server starts
 setupDatabase()
 
 
@@ -109,8 +110,7 @@ def getMenu(restaurantId: int):
 def updateMenuItem(itemId: int, updateData: ItemUpdateData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
-    
-    # We only update the fields that were actually provided in the request
+
     if updateData.itemName is not None:
         dbCursor.execute("UPDATE MenuItems SET itemName = ? WHERE itemId = ?", (updateData.itemName, itemId))
     if updateData.itemDesc is not None:
@@ -178,3 +178,18 @@ def getOrderQueue(restaurantId: int):
         
     dbConn.close()
     return formattedQueue
+
+@app.put("/api/order/{orderId}/complete")
+def completeOrder(orderId: int):
+    """Admin endpoint to mark an order as cooked/delivered."""
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    
+    dbCursor.execute(
+        "UPDATE Orders SET orderStatus = 'Completed' WHERE orderId = ?", 
+        (orderId,)
+    )
+    
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success", "message": "Order marked as completed."}
