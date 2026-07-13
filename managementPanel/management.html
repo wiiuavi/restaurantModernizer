@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Till Management Panel</title>
+    <link rel="stylesheet" href="managementStyles.css">
+</head>
+<body>
+
+    <div id="passwordOverlay" class="passwordOverlay">
+        <div class="loginBox">
+            <h2>Management Authentication</h2>
+            <input type="password" id="managementPasswordInput" class="managementPasswordInput" placeholder="Enter PIN...">
+            <button class="actionBtn blueBtn" onclick="verifyManagementPassword()">Access POS</button>
+            <p id="errorMessage" class="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="managementDashboardContent" class="hiddenView">
+        <header class="managementHeader">
+            <h1>POS Till & Management Console</h1>
+            <div class="headerControls">
+                <button class="actionBtn outlineBtn" onclick="toggleSection('menuManagementSection')">Toggle Menu Editor</button>
+                <button class="actionBtn outlineBtn" onclick="toggleSection('historicalOrdersSection')">Toggle Order Logs</button>
+            </div>
+        </header>
+
+        <div class="managementGrid">
+            
+            <section class="managementSection" id="posTillSection">
+                <h2>Active Till / Ring-Up</h2>
+                <div class="formBox">
+                    <input type="number" id="manualTableNum" placeholder="Table Number" class="formInput">
+                    <p>Select Item to Add:</p>
+                    <select id="manualItemSelector" class="formInput"></select>
+                    
+                    <div class="rowInputs">
+                        <input type="number" id="manualItemQuantity" placeholder="Qty" value="1" class="formInput shortInput">
+                        <input type="text" id="manualItemNotes" placeholder="Special Instructions" class="formInput longInput">
+                    </div>
+                    <button class="actionBtn blueBtn fullWidth" onclick="addSelectedToManualCart()">Add to Active Cart</button>
+                    
+                    <div id="manualCartPreview" class="manualCartPreview">Cart empty.</div>
+                    <h3 id="manualCartTotal" style="text-align: right; margin: 10px 0;">Total: $0.00</h3>
+                    
+                    <button class="actionBtn greenBtn fullWidth" onclick="submitManualCartAsOrder()">Submit Order to Kitchen</button>
+                </div>
+            </section>
+
+            <section class="managementSection hiddenView" id="menuManagementSection">
+                <h2>Menu Database Editor</h2>
+                <div class="formBox" id="itemEditorBox">
+                    <h3 id="editorTitle">Create New Item</h3>
+                    <input type="hidden" id="editingItemId" value=""> 
+                    
+                    <input type="text" id="itemNameInput" placeholder="Item Name (Required)" class="formInput">
+                    <input type="number" id="itemPriceInput" placeholder="Price (e.g. 12.99)" step="0.01" class="formInput">
+                    <input type="text" id="itemDescInput" placeholder="Description (Optional)" class="formInput">
+                    <input type="text" id="itemImageInput" placeholder="Image URL (Optional)" class="formInput">
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="actionBtn greenBtn fullWidth" id="saveItemBtn" onclick="submitItemForm()">Save to Database</button>
+                        <button class="actionBtn outlineBtn hiddenView" id="cancelEditBtn" onclick="resetItemForm()">Cancel</button>
+                    </div>
+                </div>
+                
+                <div id="managementMenuContainer">Loading master list...</div>
+            </section>
+
+            <section class="managementSection hiddenView" id="historicalOrdersSection">
+                <h2>System Order Logs</h2>
+                <div id="managementOrdersContainer">Loading master order logs...</div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="managementApp.js"></script>
+</body>
+</html>

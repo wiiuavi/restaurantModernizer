@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Menu</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="menuView">
+        <div class="menuHeader">
+            <h1 id="restaurantName">Loading Menu...</h1>
+            <p id="tableDisplay">Table: Detecting...</p>
+        </div>
+        <div id="menuGrid" class="menuGrid"></div>
+        <div class="cartSection">
+            <h2>Your Order</h2>
+            <div id="cartItemsList"></div>
+            <h3 id="cartTotalDisplay">Total: $0.00</h3>
+            <button class="submitOrderButton" onclick="sendOrderToServer()">Place Order</button>
+        </div>
+    </div>
+
+    <div id="confirmationView" class="hiddenView confirmationScreen">
+        <h1>Order Received!</h1>
+        <p>Your food is being prepared.</p>
+        <div class="receiptBox">
+            <h3>Receipt</h3>
+            <div id="receiptItems"></div>
+            <h2 id="receiptTotal"></h2>
+        </div>
+        <p>Thank you for dining with us.</p>
+    </div>
+    <script src="menuApp.js"></script>
+</body>
+</html>

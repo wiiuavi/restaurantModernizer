@@ -1,0 +1,111 @@
+body { font-family: Arial, sans-serif; 
+margin: 0; 
+padding: 20px; 
+background-color: #1a1a1a; 
+color: #f4f4f4; 
+}
+
+.passwordOverlay { position: fixed; 
+top: 0; 
+left: 0; 
+width: 100%; 
+height: 100%; 
+background: #111; 
+display: flex; 
+justify-content: center; 
+align-items: center; 
+z-index: 9999; 
+}
+
+.loginBox { background: #222; 
+padding: 30px; 
+border-radius: 8px; 
+text-align: center; 
+}
+
+.kitchenPasswordInput { padding: 10px; 
+margin: 15px 0; 
+width: 80%; 
+}
+
+.actionBtn { padding: 8px 15px; 
+border: none; 
+border-radius: 4px; 
+cursor: pointer; 
+color: white; 
+font-weight: bold; 
+}
+
+.greenBtn { background: #27ae60; 
+}
+ .redBtn { background: #c0392b; 
+}
+ .blueBtn { background: #2980b9; 
+}
+
+.hiddenView { display: none !important; 
+}
+
+.kitchenHeader { display: flex; 
+justify-content: space-between; 
+align-items: center; 
+border-bottom: 1px solid #333; 
+padding-bottom: 10px; 
+margin-bottom: 20px; 
+}
+
+.menuDrawer { background: #2c3e50; 
+padding: 15px; 
+border-radius: 8px; 
+margin-bottom: 20px; 
+}
+
+.kitchenItemCard { display: flex; 
+justify-content: space-between; 
+border-bottom: 1px solid #444; 
+padding: 10px 0; 
+}
+
+.queueGrid { display: grid; 
+grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+gap: 15px; 
+}
+
+.orderCard { background: #2d3436; 
+border-top: 5px solid #0984e3; 
+padding: 15px; 
+border-radius: 6px; 
+box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
+}
+
+.orderHeader { display: flex; 
+justify-content: space-between; 
+font-size: 1.1rem; 
+font-weight: bold; 
+margin-bottom: 10px; 
+border-bottom: 1px solid #555; 
+padding-bottom: 5px; 
+}
+
+.ticketItem { font-size: 1.2rem; 
+margin: 8px 0; 
+cursor: pointer; 
+padding: 5px; 
+border-radius: 4px; 
+background: #353b48; 
+transition: 0.2s; 
+}
+
+.ticketItem:hover { background: #4b6584; 
+}
+
+.struckThrough { text-decoration: line-through; 
+opacity: 0.4; 
+background: transparent; 
+}
+
+.notes { color: #f1c40f; 
+font-size: 0.9rem; 
+font-style: italic; 
+display: block; 
+}

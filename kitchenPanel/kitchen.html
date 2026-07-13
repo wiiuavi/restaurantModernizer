@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Display System</title>
+    <link rel="stylesheet" href="kitchenStyles.css">
+</head>
+<body>
+    <div id="passwordOverlay" class="passwordOverlay">
+        <div class="loginBox">
+            <h2>Kitchen Authentication</h2>
+            <input type="password" id="kitchenPasswordInput" class="kitchenPasswordInput" placeholder="Enter password...">
+            <button class="actionBtn greenBtn" onclick="verifyKitchenPassword()">Unlock KDS</button>
+            <p id="errorMessage" class="errorMessage"></p>
+        </div>
+    </div>
+
+    <div id="kitchenDashboardContent" class="hiddenView">
+        <header class="kitchenHeader">
+            <h1>Kitchen Display System</h1>
+            <button class="actionBtn blueBtn" onclick="toggleMenuDrawer()">Toggle Menu Availability</button>
+        </header>
+
+        <div id="menuDrawer" class="menuDrawer hiddenView">
+            <h3>Quick Stock Toggles</h3>
+            <div id="kitchenMenuContainer">Loading...</div>
+        </div>
+
+        <section class="queueSection">
+            <div id="kitchenQueueContainer" class="queueGrid">Loading active orders...</div>
+        </section>
+    </div>
+    <script src="kitchenApp.js"></script>
+</body>
+</html>
