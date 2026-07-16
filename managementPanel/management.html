@@ -29,7 +29,7 @@
         <div class="managementGrid">
             
             <section class="managementSection" id="posTillSection">
-                <h2>Active Till / Ring-Up</h2>
+                <h2 id="tillSectionTitle">Active Till / Ring-Up</h2>
                 <div class="formBox">
                     <input type="number" id="manualTableNum" placeholder="Table Number" class="formInput">
                     <p>Select Item to Add:</p>
@@ -44,7 +44,10 @@
                     <div id="manualCartPreview" class="manualCartPreview">Cart empty.</div>
                     <h3 id="manualCartTotal" style="text-align: right; margin: 10px 0;">Total: $0.00</h3>
                     
-                    <button class="actionBtn greenBtn fullWidth" onclick="submitManualCartAsOrder()">Submit Order to Kitchen</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="submitCartBtn" class="actionBtn greenBtn fullWidth" onclick="submitManualCartAsOrder()">Submit Order to Kitchen</button>
+                        <button id="cancelEditCartBtn" class="actionBtn redBtn hiddenView" onclick="cancelOrderEdit()">Cancel Edit</button>
+                    </div>
                 </div>
             </section>
 

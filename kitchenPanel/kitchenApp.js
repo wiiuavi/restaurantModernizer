@@ -1,18 +1,26 @@
 const urlParams = new URLSearchParams(window.location.search);
 const restaurantId = parseInt(urlParams.get('restaurantId')) || 1; 
 const apiBaseUrl = "http://127.0.0.1:8000/api";
-const hardcodedPassword = "chef";
+
+let activeChefAuth = "";
 
 function verifyKitchenPassword() {
-    if (document.getElementById("kitchenPasswordInput").value === hardcodedPassword) {
-        document.getElementById("passwordOverlay").classList.add("hiddenView");
-        document.getElementById("kitchenDashboardContent").classList.remove("hiddenView");
-        loadOrderQueue();
-        loadMenuDrawer();
-        setInterval(loadOrderQueue, 5000);
-    } else {
-        document.getElementById("errorMessage").innerText = "Invalid Access.";
-    }
+    const attemptedPin = document.getElementById("kitchenPasswordInput").value;
+    
+    fetch(`${apiBaseUrl}/auth/chef`, { headers: { "chefAuth": attemptedPin } })
+        .then(res => {
+            if(res.ok) {
+                activeChefAuth = attemptedPin;
+                document.getElementById("passwordOverlay").classList.add("hiddenView");
+                document.getElementById("kitchenDashboardContent").classList.remove("hiddenView");
+                loadOrderQueue();
+                loadMenuDrawer();
+                setInterval(loadOrderQueue, 5000);
+            } else {
+                document.getElementById("errorMessage").innerText = "Invalid Access.";
+            }
+        })
+        .catch(err => console.error(err));
 }
 window.verifyKitchenPassword = verifyKitchenPassword;
 
@@ -43,14 +51,14 @@ function loadMenuDrawer() {
 function toggleItemStock(itemId, currentStock) {
     fetch(`${apiBaseUrl}/item/${itemId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "adminAuth": "admin123" },
         body: JSON.stringify({ inStock: !currentStock })
     }).then(() => loadMenuDrawer());
 }
 window.toggleItemStock = toggleItemStock;
 
 function loadOrderQueue() {
-    fetch(`${apiBaseUrl}/queue/${restaurantId}`)
+    fetch(`${apiBaseUrl}/queue/${restaurantId}`, { headers: { "chefAuth": activeChefAuth } })
         .then(res => res.json())
         .then(orders => {
             const container = document.getElementById("kitchenQueueContainer");
@@ -84,13 +92,16 @@ function loadOrderQueue() {
 function toggleCookedStatus(orderItemId, nextCookedState) {
     fetch(`${apiBaseUrl}/orderitem/${orderItemId}/toggle`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "chefAuth": activeChefAuth },
         body: JSON.stringify({ isCooked: nextCookedState })
     }).then(() => loadOrderQueue());
 }
 window.toggleCookedStatus = toggleCookedStatus;
 
 function completeOrder(orderId) {
-    fetch(`${apiBaseUrl}/order/${orderId}/complete`, { method: "PUT" }).then(() => loadOrderQueue());
+    fetch(`${apiBaseUrl}/order/${orderId}/complete`, { 
+        method: "PUT",
+        headers: { "chefAuth": activeChefAuth }
+    }).then(() => loadOrderQueue());
 }
 window.completeOrder = completeOrder;

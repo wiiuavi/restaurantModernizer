@@ -1,20 +1,29 @@
 const urlParams = new URLSearchParams(window.location.search);
 const restaurantId = parseInt(urlParams.get('restaurantId')) || 1; 
 const apiBaseUrl = "http://127.0.0.1:8000/api";
-const hardcodedPassword = "admin";
 
+let activeAdminAuth = "";
 let masterMenuArray = [];
 let localManualCart = [];
+let globalOrdersList = [];
+let activeEditOrderId = null;
 
 function verifyManagementPassword() {
-    if (document.getElementById("managementPasswordInput").value === hardcodedPassword) {
-        document.getElementById("passwordOverlay").classList.add("hiddenView");
-        document.getElementById("managementDashboardContent").classList.remove("hiddenView");
-        refreshManagementDashboard();
-        setInterval(loadAllHistoricalOrders, 7000);
-    } else {
-        document.getElementById("errorMessage").innerText = "Invalid PIN.";
-    }
+    const attemptedPin = document.getElementById("managementPasswordInput").value;
+    
+    fetch(`${apiBaseUrl}/auth/admin`, { headers: { "adminAuth": attemptedPin } })
+        .then(res => {
+            if(res.ok) {
+                activeAdminAuth = attemptedPin;
+                document.getElementById("passwordOverlay").classList.add("hiddenView");
+                document.getElementById("managementDashboardContent").classList.remove("hiddenView");
+                refreshManagementDashboard();
+                setInterval(loadAllHistoricalOrders, 7000);
+            } else {
+                document.getElementById("errorMessage").innerText = "Invalid PIN.";
+            }
+        })
+        .catch(err => console.error(err));
 }
 window.verifyManagementPassword = verifyManagementPassword;
 
@@ -37,7 +46,7 @@ function loadMasterMenu() {
             renderMenuControlList();
             populateManualOrderDropdown();
         })
-        .catch(err => console.error("Menu fetch failed:", err));
+        .catch(err => console.error(err));
 }
 
 function renderMenuControlList() {
@@ -52,7 +61,7 @@ function renderMenuControlList() {
             <div class="itemDetails">
                 <strong>${item.itemName}</strong>
                 <span class="itemPriceTag">${priceStr}</span>
-                <span style="font-size: 0.85rem; color:#7f8c8d;">${item.itemDesc || 'No desc'}</span>
+                <span style="font-size: 0.85rem; color:~7f8c8d;">${item.itemDesc || 'No desc'}</span>
             </div>
             <div style="display:flex; gap:5px; flex-direction:column;">
                 <button class="actionBtn blueBtn" style="padding:5px;" onclick="loadItemIntoEditor(${item.itemId})">Edit</button>
@@ -76,7 +85,6 @@ function loadItemIntoEditor(itemId) {
 
     document.getElementById("saveItemBtn").innerText = "Update Item";
     document.getElementById("cancelEditBtn").classList.remove("hiddenView");
-    
     document.getElementById("menuManagementSection").classList.remove("hiddenView");
 }
 window.loadItemIntoEditor = loadItemIntoEditor;
@@ -100,7 +108,7 @@ function submitItemForm() {
     const descInput = document.getElementById("itemDescInput").value;
     const imageInput = document.getElementById("itemImageInput").value;
 
-    if (!nameInput.trim()) return alert("Please specify an item name.");
+    if (!nameInput.trim()) return alert("Specify an item name.");
 
     const payload = {
         restaurantId: restaurantId,
@@ -114,7 +122,7 @@ function submitItemForm() {
     if (editId) {
         fetch(`${apiBaseUrl}/item/${editId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "adminAuth": activeAdminAuth },
             body: JSON.stringify(payload)
         }).then(() => {
             resetItemForm();
@@ -123,7 +131,7 @@ function submitItemForm() {
     } else {
         fetch(`${apiBaseUrl}/item`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "adminAuth": activeAdminAuth },
             body: JSON.stringify(payload)
         }).then(() => {
             resetItemForm();
@@ -134,17 +142,17 @@ function submitItemForm() {
 window.submitItemForm = submitItemForm;
 
 function completelyPurgeItem(itemId) {
-    if (!confirm("Delete this item from the database forever?")) return;
-    fetch(`${apiBaseUrl}/item/${itemId}`, { method: "DELETE" })
-        .then(() => loadMasterMenu());
+    if (!confirm("Delete this item?")) return;
+    fetch(`${apiBaseUrl}/item/${itemId}`, { 
+        method: "DELETE",
+        headers: { "adminAuth": activeAdminAuth }
+    }).then(() => loadMasterMenu());
 }
 window.completelyPurgeItem = completelyPurgeItem;
 
 function populateManualOrderDropdown() {
     const selector = document.getElementById("manualItemSelector");
     selector.innerHTML = "";
-    
-    // Only allow ring up items that have a price
     const availableItems = masterMenuArray.filter(item => item.price && item.price > 0);
     
     availableItems.forEach(item => {
@@ -228,24 +236,37 @@ function submitManualCartAsOrder() {
         }))
     };
 
-    fetch(`${apiBaseUrl}/order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    }).then(() => {
-        localManualCart = [];
-        tableInput.value = "";
-        updateManualCartUI();
-        loadAllHistoricalOrders();
-        alert("Order sent to kitchen!");
-    });
+    if(activeEditOrderId) {
+        fetch(`${apiBaseUrl}/order/${activeEditOrderId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "adminAuth": activeAdminAuth },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            cancelOrderEdit();
+            loadAllHistoricalOrders();
+        });
+    } else {
+        fetch(`${apiBaseUrl}/order`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            localManualCart = [];
+            tableInput.value = "";
+            updateManualCartUI();
+            loadAllHistoricalOrders();
+        });
+    }
 }
 window.submitManualCartAsOrder = submitManualCartAsOrder;
 
 function loadAllHistoricalOrders() {
-    fetch(`${apiBaseUrl}/orders/all/${restaurantId}`)
+    fetch(`${apiBaseUrl}/orders/all/${restaurantId}`, { headers: { "adminAuth": activeAdminAuth } })
         .then(res => res.json())
-        .then(allOrders => renderAllOrdersList(allOrders));
+        .then(allOrders => {
+            globalOrdersList = allOrders;
+            renderAllOrdersList(allOrders);
+        });
 }
 
 function renderAllOrdersList(allOrders) {
@@ -268,16 +289,19 @@ function renderAllOrdersList(allOrders) {
             const itemPrice = item.price || 0;
             const lineTotal = itemPrice * item.quantity;
             orderTotal += lineTotal;
-            linesHtml += `<div>• ${item.quantity}x ${item.itemName} ($${lineTotal.toFixed(2)}) <i style="color:#7f8c8d;">${item.specialNotes || ''}</i></div>`;
+            linesHtml += `<div> ${item.quantity}x ${item.itemName} ($${lineTotal.toFixed(2)}) <i style="color:~7f8c8d;">${item.specialNotes || ''}</i></div>`;
         });
 
         card.innerHTML = `
             <div class="orderTitleRow">
-                <span>Order #${order.orderId} (Table ${order.tableNum})</span>
-                <span>$${orderTotal.toFixed(2)} | <span style="color:#2980b9;">${order.orderStatus}</span></span>
+                <span>Order ~${order.orderId} (Table ${order.tableNum})</span>
+                <span>$${orderTotal.toFixed(2)} | <span style="color:~2980b9;">${order.orderStatus}</span></span>
             </div>
             <div style="margin-bottom: 12px;">${linesHtml}</div>
-            <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="cancelAndPurgeOrder(${order.orderId})">Void Order</button>
+            <div style="display:flex; gap:10px;">
+                <button class="actionBtn blueBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="loadOrderIntoEditor(${order.orderId})">Edit Order</button>
+                <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="cancelAndPurgeOrder(${order.orderId})">Void Order</button>
+            </div>
         `;
         container.appendChild(card);
     });
@@ -285,7 +309,42 @@ function renderAllOrdersList(allOrders) {
 
 function cancelAndPurgeOrder(orderId) {
     if (!confirm("Void this transaction entirely?")) return;
-    fetch(`${apiBaseUrl}/order/${orderId}`, { method: "DELETE" })
-        .then(() => loadAllHistoricalOrders());
+    fetch(`${apiBaseUrl}/order/${orderId}`, { 
+        method: "DELETE",
+        headers: { "adminAuth": activeAdminAuth }
+    }).then(() => loadAllHistoricalOrders());
 }
 window.cancelAndPurgeOrder = cancelAndPurgeOrder;
+
+function loadOrderIntoEditor(orderId) {
+    const targetOrder = globalOrdersList.find(o => o.orderId === orderId);
+    if (!targetOrder) return;
+    
+    activeEditOrderId = orderId;
+    document.getElementById("tillSectionTitle").innerText = `Editing Order ~${orderId}`;
+    document.getElementById("manualTableNum").value = targetOrder.tableNum;
+    
+    localManualCart = targetOrder.items.map(item => ({
+        itemId: item.itemId,
+        itemName: item.itemName,
+        price: item.price,
+        quantity: item.quantity,
+        specialNotes: item.specialNotes
+    }));
+    
+    updateManualCartUI();
+    document.getElementById("submitCartBtn").innerText = "Update Existing Order";
+    document.getElementById("cancelEditCartBtn").classList.remove("hiddenView");
+}
+window.loadOrderIntoEditor = loadOrderIntoEditor;
+
+function cancelOrderEdit() {
+    activeEditOrderId = null;
+    localManualCart = [];
+    document.getElementById("tillSectionTitle").innerText = "Active Till / Ring-Up";
+    document.getElementById("manualTableNum").value = "";
+    document.getElementById("submitCartBtn").innerText = "Submit Order to Kitchen";
+    document.getElementById("cancelEditCartBtn").classList.add("hiddenView");
+    updateManualCartUI();
+}
+window.cancelOrderEdit = cancelOrderEdit;

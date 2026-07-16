@@ -1,11 +1,11 @@
 import sqlite3
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="MicroSaaS Menu API")
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -69,6 +69,14 @@ def setupDatabase():
 
 setupDatabase()
 
+def requireAdmin(adminAuth: str = Header(None)):
+    if adminAuth != "admin123":
+        raise HTTPException(status_code=401)
+
+def requireChef(chefAuth: str = Header(None)):
+    if chefAuth != "chef123":
+        raise HTTPException(status_code=401)
+
 class ItemUpdateData(BaseModel):
     itemName: Optional[str] = None
     itemDesc: Optional[str] = None
@@ -97,7 +105,13 @@ class NewItemData(BaseModel):
 class ToggleCookedData(BaseModel):
     isCooked: bool
 
-#endpoints
+@app.get("/api/auth/admin", dependencies=[Depends(requireAdmin)])
+def checkAdminAuth():
+    return {"status": "success"}
+
+@app.get("/api/auth/chef", dependencies=[Depends(requireChef)])
+def checkChefAuth():
+    return {"status": "success"}
 
 @app.get("/api/menu/{restaurantId}")
 def getMenu(restaurantId: int):
@@ -108,7 +122,7 @@ def getMenu(restaurantId: int):
     dbConn.close()
     return [dict(row) for row in menuRows]
 
-@app.put("/api/item/{itemId}")
+@app.put("/api/item/{itemId}", dependencies=[Depends(requireAdmin)])
 def updateMenuItem(itemId: int, updateData: ItemUpdateData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -155,7 +169,25 @@ def placeNewOrder(orderData: NewOrderData):
     dbConn.close()
     return {"status": "success", "orderId": newOrderId}
 
-@app.get("/api/queue/{restaurantId}")
+@app.put("/api/order/{orderId}", dependencies=[Depends(requireAdmin)])
+def updateExistingOrder(orderId: int, updateData: NewOrderData):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    
+    dbCursor.execute("UPDATE Orders SET tableNum = ? WHERE orderId = ?", (updateData.tableNum, orderId))
+    dbCursor.execute("DELETE FROM OrderItems WHERE orderId = ?", (orderId,))
+    
+    for item in updateData.orderedItems:
+        dbCursor.execute(
+            "INSERT INTO OrderItems (orderId, itemId, quantity, specialNotes, isCooked) VALUES (?, ?, ?, ?, 0)",
+            (orderId, item.itemId, item.quantity, item.specialNotes)
+        )
+        
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success"}
+
+@app.get("/api/queue/{restaurantId}", dependencies=[Depends(requireChef)])
 def getOrderQueue(restaurantId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -184,7 +216,7 @@ def getOrderQueue(restaurantId: int):
     dbConn.close()
     return formattedQueue
 
-@app.put("/api/orderitem/{orderItemId}/toggle")
+@app.put("/api/orderitem/{orderItemId}/toggle", dependencies=[Depends(requireChef)])
 def toggleOrderItemCooked(orderItemId: int, toggleData: ToggleCookedData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -193,7 +225,7 @@ def toggleOrderItemCooked(orderItemId: int, toggleData: ToggleCookedData):
     dbConn.close()
     return {"status": "success"}
 
-@app.put("/api/order/{orderId}/complete")
+@app.put("/api/order/{orderId}/complete", dependencies=[Depends(requireChef)])
 def completeOrder(orderId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -202,7 +234,7 @@ def completeOrder(orderId: int):
     dbConn.close()
     return {"status": "success"}
 
-@app.post("/api/item")
+@app.post("/api/item", dependencies=[Depends(requireAdmin)])
 def createMenuItem(itemData: NewItemData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -223,7 +255,7 @@ def createMenuItem(itemData: NewItemData):
     dbConn.close()
     return {"status": "success", "itemId": newItemId}
 
-@app.delete("/api/item/{itemId}")
+@app.delete("/api/item/{itemId}", dependencies=[Depends(requireAdmin)])
 def deleteMenuItem(itemId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -232,7 +264,7 @@ def deleteMenuItem(itemId: int):
     dbConn.close()
     return {"status": "success"}
 
-@app.get("/api/orders/all/{restaurantId}")
+@app.get("/api/orders/all/{restaurantId}", dependencies=[Depends(requireAdmin)])
 def getAllOrders(restaurantId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -243,7 +275,7 @@ def getAllOrders(restaurantId: int):
         orderDict = dict(orderRow)
         dbCursor.execute(
             """
-            SELECT OrderItems.quantity, OrderItems.specialNotes, MenuItems.itemName, MenuItems.price 
+            SELECT OrderItems.quantity, OrderItems.specialNotes, MenuItems.itemName, MenuItems.price, MenuItems.itemId 
             FROM OrderItems 
             JOIN MenuItems ON OrderItems.itemId = MenuItems.itemId 
             WHERE OrderItems.orderId = ?
@@ -256,7 +288,7 @@ def getAllOrders(restaurantId: int):
     dbConn.close()
     return formattedOrders
 
-@app.delete("/api/order/{orderId}")
+@app.delete("/api/order/{orderId}", dependencies=[Depends(requireAdmin)])
 def deleteOrder(orderId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
