@@ -51,7 +51,7 @@ function loadMenuDrawer() {
 function toggleItemStock(itemId, currentStock) {
     fetch(`${apiBaseUrl}/item/${itemId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "adminAuth": "admin123" },
+        headers: { "Content-Type": "application/json", "adminAuth": activeChefAuth },
         body: JSON.stringify({ inStock: !currentStock })
     }).then(() => loadMenuDrawer());
 }
@@ -65,6 +65,8 @@ function loadOrderQueue() {
             container.innerHTML = "";
             if(orders.length === 0) { container.innerHTML = "No active tickets."; return; }
 
+            const currentTimeMs = new Date().getTime();
+
             orders.forEach(order => {
                 let itemsHtml = "";
                 order.items.forEach(item => {
@@ -76,10 +78,15 @@ function loadOrderQueue() {
                         </div>`;
                 });
 
+                const orderTimeMs = new Date(order.orderTime).getTime();
+                const diffMins = Math.floor((currentTimeMs - orderTimeMs) / 60000);
+                const timeString = diffMins <= 0 ? "Just now" : `Ordered ${diffMins} min ago`;
+
                 container.innerHTML += `
                     <div class="orderCard">
                         <div class="orderHeader">
                             <span>Table ${order.tableNum}</span>
+                            <span class="timerText">${timeString}</span>
                             <span>#${order.orderId}</span>
                         </div>
                         <div>${itemsHtml}</div>

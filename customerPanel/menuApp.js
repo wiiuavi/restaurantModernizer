@@ -46,14 +46,54 @@ function updateCartUI() {
     const list = document.getElementById("cartItemsList");
     let total = 0;
     list.innerHTML = "";
-    shoppingCart.forEach(item => {
-        total += (item.price * item.quantity);
-        list.innerHTML += `<div style="margin-bottom: 10px;">
-            <strong>${item.itemName} (x${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}</strong>
-        </div>`;
+    
+    if (shoppingCart.length === 0) {
+        list.innerHTML = "<p>Cart is empty.</p>";
+        document.getElementById("cartTotalDisplay").innerText = "Total: $0.00";
+        return;
+    }
+
+    shoppingCart.forEach((item, index) => {
+        const lineTotal = item.price * item.quantity;
+        total += lineTotal;
+        list.innerHTML += `
+            <div class="cartItemRow">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${item.itemName}</strong>
+                    <span>$${lineTotal.toFixed(2)} <button class="removeBtn" onclick="removeCartItem(${index})">X</button></span>
+                </div>
+                <div class="cartInputRow">
+                    <div class="qtyControlRow">
+                        <button class="qtyAdjustBtn" onclick="modifyCartQuantity(${index}, -1)">-</button>
+                        <span class="qtyLabel">${item.quantity}</span>
+                        <button class="qtyAdjustBtn" onclick="modifyCartQuantity(${index}, 1)">+</button>
+                    </div>
+                    <input type="text" class="cartInput" style="flex: 1;" placeholder="Add notes..." value="${item.specialNotes}" onchange="updateCartNotes(${index}, this.value)">
+                </div>
+            </div>`;
     });
     document.getElementById("cartTotalDisplay").innerText = `Total: $${total.toFixed(2)}`;
 }
+
+function modifyCartQuantity(index, amount) {
+    const newQty = shoppingCart[index].quantity + amount;
+    if (newQty > 0) {
+        shoppingCart[index].quantity = newQty;
+    }
+    updateCartUI();
+}
+window.modifyCartQuantity = modifyCartQuantity;
+
+function updateCartNotes(index, newNote) {
+    shoppingCart[index].specialNotes = newNote;
+}
+window.updateCartNotes = updateCartNotes;
+
+function removeCartItem(index) {
+    shoppingCart.splice(index, 1);
+    updateCartUI();
+}
+window.removeCartItem = removeCartItem;
 
 function sendOrderToServer() {
     if(!shoppingCart.length) return alert("Cart empty");
@@ -65,7 +105,6 @@ function sendOrderToServer() {
         body: JSON.stringify(payload)
     }).then(res => res.json()).then(data => {
         if(data.status === "success") {
-            // Build the receipt screen
             document.getElementById("menuView").classList.add("hiddenView");
             document.getElementById("confirmationView").classList.remove("hiddenView");
             
