@@ -174,7 +174,6 @@ def updateExistingOrder(orderId: int, updateData: NewOrderData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
     
-    dbCursor.execute("UPDATE Orders SET tableNum = ? WHERE orderId = ?", (updateData.tableNum, orderId))
     dbCursor.execute("DELETE FROM OrderItems WHERE orderId = ?", (orderId,))
     
     for item in updateData.orderedItems:

@@ -1,6 +1,7 @@
 const urlParams = new URLSearchParams(window.location.search);
 const restaurantId = parseInt(urlParams.get('restaurantId')) || 1; 
 const apiBaseUrl = "http://127.0.0.1:8000/api";
+const hardcodedPassword = "admin";
 
 let activeAdminAuth = "";
 let masterMenuArray = [];
@@ -61,7 +62,7 @@ function renderMenuControlList() {
             <div class="itemDetails">
                 <strong>${item.itemName}</strong>
                 <span class="itemPriceTag">${priceStr}</span>
-                <span style="font-size: 0.85rem; color:~7f8c8d;">${item.itemDesc || 'No desc'}</span>
+                <span style="font-size: 0.85rem; color:#7f8c8d;">${item.itemDesc || ''}</span>
             </div>
             <div style="display:flex; gap:5px; flex-direction:column;">
                 <button class="actionBtn blueBtn" style="padding:5px;" onclick="loadItemIntoEditor(${item.itemId})">Edit</button>
@@ -201,15 +202,38 @@ function updateManualCartUI() {
     localManualCart.forEach((item, index) => {
         const lineTotal = item.price * item.quantity;
         total += lineTotal;
-        html += `<div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span>${item.quantity}x ${item.itemName} <i>${item.specialNotes ? `(${item.specialNotes})` : ''}</i></span>
-            <span>$${lineTotal.toFixed(2)} <button onclick="removeFromManualCart(${index})" style="color:red; cursor:pointer; border:none; background:none;">X</button></span>
+        html += `
+        <div style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 10px; margin-bottom: 10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                <strong>${item.itemName}</strong>
+                <span>$${lineTotal.toFixed(2)} <button onclick="removeFromManualCart(${index})" style="color:red; cursor:pointer; border:none; background:none; font-weight:bold; font-size:1rem;">X</button></span>
+            </div>
+            <div style="display:flex; gap: 10px;">
+                <input type="number" class="formInput" style="width: 60px; margin: 0; padding: 6px;" value="${item.quantity}" onchange="updateCartItemQuantity(${index}, this.value)">
+                <input type="text" class="formInput" style="flex: 1; margin: 0; padding: 6px;" placeholder="Add notes..." value="${item.specialNotes || ''}" onchange="updateCartItemNote(${index}, this.value)">
+            </div>
         </div>`;
     });
     
     preview.innerHTML = html;
     document.getElementById("manualCartTotal").innerText = `Total: $${total.toFixed(2)}`;
 }
+
+function updateCartItemQuantity(index, newQuantity) {
+    const qty = parseInt(newQuantity);
+    if (qty > 0) {
+        localManualCart[index].quantity = qty;
+    } else {
+        localManualCart[index].quantity = 1;
+    }
+    updateManualCartUI();
+}
+window.updateCartItemQuantity = updateCartItemQuantity;
+
+function updateCartItemNote(index, newNoteText) {
+    localManualCart[index].specialNotes = newNoteText;
+}
+window.updateCartItemNote = updateCartItemNote;
 
 function removeFromManualCart(index) {
     localManualCart.splice(index, 1);
@@ -289,13 +313,13 @@ function renderAllOrdersList(allOrders) {
             const itemPrice = item.price || 0;
             const lineTotal = itemPrice * item.quantity;
             orderTotal += lineTotal;
-            linesHtml += `<div> ${item.quantity}x ${item.itemName} ($${lineTotal.toFixed(2)}) <i style="color:~7f8c8d;">${item.specialNotes || ''}</i></div>`;
+            linesHtml += `<div>• ${item.quantity}x ${item.itemName} ($${lineTotal.toFixed(2)}) <i style="color:#7f8c8d;">${item.specialNotes || ''}</i></div>`;
         });
 
         card.innerHTML = `
             <div class="orderTitleRow">
-                <span>Order ~${order.orderId} (Table ${order.tableNum})</span>
-                <span>$${orderTotal.toFixed(2)} | <span style="color:~2980b9;">${order.orderStatus}</span></span>
+                <span>Order #${order.orderId} (Table ${order.tableNum})</span>
+                <span>$${orderTotal.toFixed(2)} | <span style="color:#2980b9;">${order.orderStatus}</span></span>
             </div>
             <div style="margin-bottom: 12px;">${linesHtml}</div>
             <div style="display:flex; gap:10px;">
@@ -321,8 +345,11 @@ function loadOrderIntoEditor(orderId) {
     if (!targetOrder) return;
     
     activeEditOrderId = orderId;
-    document.getElementById("tillSectionTitle").innerText = `Editing Order ~${orderId}`;
-    document.getElementById("manualTableNum").value = targetOrder.tableNum;
+    document.getElementById("tillSectionTitle").innerText = `Editing Order #${orderId}`;
+    
+    const tableInput = document.getElementById("manualTableNum");
+    tableInput.value = targetOrder.tableNum;
+    tableInput.disabled = true;
     
     localManualCart = targetOrder.items.map(item => ({
         itemId: item.itemId,
@@ -342,7 +369,11 @@ function cancelOrderEdit() {
     activeEditOrderId = null;
     localManualCart = [];
     document.getElementById("tillSectionTitle").innerText = "Active Till / Ring-Up";
-    document.getElementById("manualTableNum").value = "";
+    
+    const tableInput = document.getElementById("manualTableNum");
+    tableInput.value = "";
+    tableInput.disabled = false;
+    
     document.getElementById("submitCartBtn").innerText = "Submit Order to Kitchen";
     document.getElementById("cancelEditCartBtn").classList.add("hiddenView");
     updateManualCartUI();
