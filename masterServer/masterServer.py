@@ -16,7 +16,8 @@ app.add_middleware(
 dbName = "masterMenuDatabase.db"
 
 def getDbConnection():
-    dbConn = sqlite3.connect(dbName)
+    dbConn = sqlite3.connect(dbName, timeout=10.0)
+    dbConn.execute("PRAGMA journal_mode=WAL;")
     dbConn.row_factory = sqlite3.Row
     return dbConn
 
@@ -296,4 +297,3 @@ def deleteOrder(orderId: int):
     dbConn.commit()
     dbConn.close()
     return {"status": "success"}
-#uvicorn masterServer:app --reload

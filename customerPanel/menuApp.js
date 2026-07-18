@@ -6,10 +6,17 @@ let shoppingCart = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tableDisplay").innerText = `Table: ${tableNum}`;
+    
+    const savedCartData = sessionStorage.getItem("activeShoppingCart");
+    if(savedCartData) {
+        shoppingCart = JSON.parse(savedCartData);
+    }
+    
     fetch(`${apiBaseUrl}/menu/${restaurantId}`)
         .then(res => res.json())
         .then(menu => {
             document.getElementById("restaurantName").innerText = "Menu";
+            document.getElementById("navRestaurantName").innerText = "Menu";
             const grid = document.getElementById("menuGrid");
             grid.innerHTML = "";
             menu.forEach(item => {
@@ -31,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${isStock ? `<button class="addToCartButton" onclick="addItemToCart(${item.itemId}, '${item.itemName}', ${item.price})">Add to Order</button>` : `<span class="outOfStockText">Out of Stock</span>`}
                     </div>`;
             });
+            updateCartUI();
         });
 });
 
@@ -43,6 +51,7 @@ function addItemToCart(itemId, itemName, price) {
 window.addItemToCart = addItemToCart;
 
 function updateCartUI() {
+    sessionStorage.setItem("activeShoppingCart", JSON.stringify(shoppingCart));
     const list = document.getElementById("cartItemsList");
     let total = 0;
     list.innerHTML = "";
@@ -86,6 +95,7 @@ window.modifyCartQuantity = modifyCartQuantity;
 
 function updateCartNotes(index, newNote) {
     shoppingCart[index].specialNotes = newNote;
+    updateCartUI();
 }
 window.updateCartNotes = updateCartNotes;
 
@@ -105,6 +115,7 @@ function sendOrderToServer() {
         body: JSON.stringify(payload)
     }).then(res => res.json()).then(data => {
         if(data.status === "success") {
+            sessionStorage.removeItem("activeShoppingCart");
             document.getElementById("menuView").classList.add("hiddenView");
             document.getElementById("confirmationView").classList.remove("hiddenView");
             
@@ -115,6 +126,7 @@ function sendOrderToServer() {
                 receiptDiv.innerHTML += `<div class="receiptLine"><span>${i.quantity}x ${i.itemName}</span> <span>$${(i.price * i.quantity).toFixed(2)}</span></div>`;
             });
             document.getElementById("receiptTotal").innerText = `Total: $${finalTotal.toFixed(2)}`;
+            shoppingCart = [];
         }
     });
 }

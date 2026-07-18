@@ -1,20 +1,49 @@
+:root {
+    --primaryColor: #0275d8;
+    --primaryHover: #025aa5;
+    --secondaryColor: #5cb85c;
+    --secondaryHover: #4cae4c;
+    --dangerColor: #d9534f;
+    --backgroundColor: #f9f9f9;
+    --surfaceColor: #ffffff;
+    --textColor: #333333;
+    --mutedTextColor: #666666;
+    --borderColor: #e0e0e0;
+}
 body { font-family: Arial, sans-serif;
 margin: 0;
-padding: 20px;
-background-color: #f9f9f9;
-color: #333333;
+padding: 0 0 20px 0;
+background-color: var(--backgroundColor);
+color: var(--textColor);
+}
+.topNavBar { display: flex;
+justify-content: space-between;
+align-items: center;
+background-color: var(--surfaceColor);
+padding: 15px 20px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+margin-bottom: 20px;
+}
+.navLogoPlaceholder { font-weight: bold;
+font-size: 1.2rem;
+color: var(--primaryColor);
+}
+.navRestaurantName { font-weight: bold;
+font-size: 1.2rem;
 }
 .menuHeader { text-align: center;
 margin-bottom: 30px;
+padding: 0 20px;
 }
 .menuGrid { display: grid;
 grid-template-columns: 1fr;
 gap: 20px;
 max-width: 600px;
 margin: 0 auto;
+padding: 0 20px;
 }
-.menuItem { background: #ffffff;
-border: 1px solid #e0e0e0;
+.menuItem { background: var(--surfaceColor);
+border: 1px solid var(--borderColor);
 border-radius: 8px;
 padding: 15px;
 display: flex;
@@ -26,39 +55,41 @@ font-weight: bold;
 margin: 0 0 5px 0;
 }
 .itemDescription { font-size: 0.9rem;
-color: #666666;
+color: var(--mutedTextColor);
 margin: 0 0 15px 0;
 }
-.outOfStockText { color: #d9534f;
+.outOfStockText { color: var(--dangerColor);
 font-weight: bold;
 font-size: 0.9rem;
 }
-.addToCartButton { background-color: #5cb85c;
-color: white;
+.addToCartButton { background-color: var(--secondaryColor);
+color: var(--surfaceColor);
 border: none;
 padding: 8px 12px;
 border-radius: 4px;
 cursor: pointer;
 align-self: flex-start;
 }
-.addToCartButton:hover { background-color: #4cae4c;
+.addToCartButton:hover { background-color: var(--secondaryHover);
 }
 .cartSection { max-width: 600px;
 margin: 40px auto 0 auto;
-background: #ffffff;
-border: 1px solid #e0e0e0;
+background: var(--surfaceColor);
+border: 1px solid var(--borderColor);
 border-radius: 8px;
 padding: 20px;
+width: calc(100% - 40px);
+box-sizing: border-box;
 }
 .cartItemRow { display: flex;
 flex-direction: column;
 margin-bottom: 15px;
 padding-bottom: 10px;
-border-bottom: 1px dashed #eeeeee;
+border-bottom: 1px dashed var(--borderColor);
 }
 .submitOrderButton { width: 100%;
-background-color: #0275d8;
-color: white;
+background-color: var(--primaryColor);
+color: var(--surfaceColor);
 border: none;
 padding: 12px;
 font-size: 1rem;
@@ -66,19 +97,19 @@ border-radius: 4px;
 cursor: pointer;
 margin-top: 15px;
 }
-.submitOrderButton:hover { background-color: #025aa5;
+.submitOrderButton:hover { background-color: var(--primaryHover);
 }
 .hiddenView { display: none !important;
 }
 .itemPrice { font-weight: bold;
-color: #2ecc71;
+color: var(--secondaryColor);
 margin: 5px 0;
 }
 .confirmationScreen { text-align: center;
 padding: 40px 20px;
 }
-.receiptBox { background: #fff;
-border: 1px dashed #ccc;
+.receiptBox { background: var(--surfaceColor);
+border: 1px dashed var(--borderColor);
 padding: 20px;
 border-radius: 8px;
 margin: 20px auto;
@@ -88,7 +119,7 @@ text-align: left;
 .receiptLine { display: flex;
 justify-content: space-between;
 margin-bottom: 8px;
-border-bottom: 1px solid #eee;
+border-bottom: 1px solid var(--borderColor);
 padding-bottom: 4px;
 }
 .cartInputRow { display: flex;
@@ -97,11 +128,11 @@ margin-top: 5px;
 align-items: center;
 }
 .cartInput { padding: 10px;
-border: 1px solid #ccc;
+border: 1px solid var(--borderColor);
 border-radius: 4px;
 font-size: 1rem;
 }
-.removeBtn { color: #d9534f;
+.removeBtn { color: var(--dangerColor);
 background: none;
 border: none;
 cursor: pointer;
@@ -112,8 +143,8 @@ font-size: 1.2rem;
 align-items: center;
 gap: 10px;
 }
-.qtyAdjustBtn { background-color: #e0e0e0;
-color: #333333;
+.qtyAdjustBtn { background-color: var(--borderColor);
+color: var(--textColor);
 border: none;
 border-radius: 4px;
 width: 40px;
@@ -125,7 +156,7 @@ display: flex;
 justify-content: center;
 align-items: center;
 }
-.qtyAdjustBtn:active { background-color: #cccccc;
+.qtyAdjustBtn:active { opacity: 0.7;
 }
 .qtyLabel { font-size: 1.2rem;
 font-weight: bold;

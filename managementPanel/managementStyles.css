@@ -1,10 +1,22 @@
+:root {
+    --primaryColor: #3498db;
+    --primaryHover: #2980b9;
+    --successColor: #2ecc71;
+    --successHover: #27ae60;
+    --dangerColor: #e74c3c;
+    --dangerHover: #c0392b;
+    --darkColor: #34495e;
+    --backgroundColor: #eef2f7;
+    --surfaceColor: #ffffff;
+    --textColor: #2c3e50;
+    --borderColor: #cbd5e1;
+}
 body { font-family: Arial, sans-serif;
 margin: 0;
 padding: 20px;
-background-color: #eef2f7;
-color: #2c3e50;
+background-color: var(--backgroundColor);
+color: var(--textColor);
 }
-
 .passwordOverlay { position: fixed;
 top: 0;
 left: 0;
@@ -16,7 +28,7 @@ justify-content: center;
 align-items: center;
 z-index: 9999;
 }
-.loginBox { background: #fff;
+.loginBox { background: var(--surfaceColor);
 padding: 30px;
 border-radius: 8px;
 text-align: center;
@@ -26,19 +38,17 @@ box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 .managementPasswordInput { width: 90%;
 padding: 12px;
 margin: 15px 0;
-border: 1px solid #ccc;
+border: 1px solid var(--borderColor);
 border-radius: 4px;
 }
-.errorMessage { color: #e74c3c;
+.errorMessage { color: var(--dangerColor);
 font-size: 0.9rem;
 margin-top: 10px;
 }
-
 .hiddenView { display: none !important;
 }
 .fullWidth { width: 100%;
 }
-
 .managementHeader { text-align: center;
 margin-bottom: 30px;
 }
@@ -54,32 +64,27 @@ max-width: 1400px;
 margin: 0 auto;
 align-items: start;
 }
-
-@media (min-width: 992px) {
-    .managementGrid { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-}
-}
-
-.managementSection { background: #ffffff;
+@media (min-width: 992px) { .managementGrid { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+} }
+.managementSection { background: var(--surfaceColor);
 border-radius: 8px;
 padding: 25px;
 box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
-
-.formBox { background: #f8f9fa;
+.formBox { background: var(--backgroundColor);
 padding: 15px;
 border-radius: 6px;
-border: 1px solid #e2e8f0;
+border: 1px solid var(--borderColor);
 margin-bottom: 25px;
 }
 .formInput { width: 100%;
 padding: 10px;
 margin-bottom: 12px;
-border: 1px solid #cbd5e1;
+border: 1px solid var(--borderColor);
 border-radius: 4px;
 box-sizing: border-box;
 }
-.formInput:disabled { background-color: #e9ecef;
+.formInput:disabled { opacity: 0.7;
 cursor: not-allowed;
 }
 .rowInputs { display: flex;
@@ -89,7 +94,6 @@ gap: 10px;
 }
 .longInput { flex: 3;
 }
-
 .actionBtn { padding: 10px 16px;
 border: none;
 border-radius: 4px;
@@ -98,36 +102,34 @@ font-weight: bold;
 color: white;
 transition: 0.2s;
 }
-.greenBtn { background-color: #2ecc71;
-} .greenBtn:hover { background-color: #27ae60;
+.greenBtn { background-color: var(--successColor);
+} .greenBtn:hover { background-color: var(--successHover);
 }
-.redBtn { background-color: #e74c3c;
-} .redBtn:hover { background-color: #c0392b;
+.redBtn { background-color: var(--dangerColor);
+} .redBtn:hover { background-color: var(--dangerHover);
 }
-.blueBtn { background-color: #3498db;
-} .blueBtn:hover { background-color: #2980b9;
+.blueBtn { background-color: var(--primaryColor);
+} .blueBtn:hover { background-color: var(--primaryHover);
 }
 .outlineBtn { background-color: transparent;
-border: 2px solid #34495e;
-color: #34495e;
-} .outlineBtn:hover { background-color: #34495e;
+border: 2px solid var(--darkColor);
+color: var(--darkColor);
+} .outlineBtn:hover { background-color: var(--darkColor);
 color: white;
 }
-
 .databaseRow { display: flex;
 justify-content: space-between;
 align-items: center;
 padding: 12px;
-border-bottom: 1px solid #e2e8f0;
+border-bottom: 1px solid var(--borderColor);
 }
 .itemDetails span { display: block;
 }
-.itemPriceTag { color: #2ecc71;
+.itemPriceTag { color: var(--successColor);
 font-weight: bold;
 }
-
-.manualCartPreview { background: #ffffff;
-border: 1px dashed #cbd5e1;
+.manualCartPreview { background: var(--surfaceColor);
+border: 1px dashed var(--borderColor);
 padding: 10px;
 margin: 10px 0;
 font-size: 0.9rem;
@@ -135,8 +137,8 @@ border-radius: 4px;
 max-height: 250px;
 overflow-y: auto;
 }
-.managementOrderCard { background: #f8f9fa;
-border: 1px solid #e2e8f0;
+.managementOrderCard { background: var(--backgroundColor);
+border: 1px solid var(--borderColor);
 border-radius: 6px;
 padding: 15px;
 margin-bottom: 15px;
@@ -145,5 +147,29 @@ margin-bottom: 15px;
 justify-content: space-between;
 font-weight: bold;
 margin-bottom: 10px;
-border-bottom: 1px solid #ddd;
+border-bottom: 1px solid var(--borderColor);
 padding-bottom: 5px;}
+.qtyControlRow { display: flex;
+align-items: center;
+gap: 8px;
+}
+.qtyAdjustBtn { background-color: var(--borderColor);
+color: var(--textColor);
+border: none;
+border-radius: 4px;
+width: 40px;
+height: 40px;
+font-size: 1.5rem;
+font-weight: bold;
+cursor: pointer;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+.qtyAdjustBtn:active { opacity: 0.7;
+}
+.qtyLabel { font-size: 1.2rem;
+font-weight: bold;
+min-width: 25px;
+text-align: center;
+}
