@@ -297,3 +297,4 @@ def deleteOrder(orderId: int):
     dbConn.commit()
     dbConn.close()
     return {"status": "success"}
+#uvicorn masterServer:app --reload

@@ -24,9 +24,10 @@ padding: 15px 20px;
 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 margin-bottom: 20px;
 }
-.navLogoPlaceholder { font-weight: bold;
-font-size: 1.2rem;
-color: var(--primaryColor);
+.navLogo { display: block;
+height: 44px;
+width: auto;
+object-fit: contain;
 }
 .navRestaurantName { font-weight: bold;
 font-size: 1.2rem;
