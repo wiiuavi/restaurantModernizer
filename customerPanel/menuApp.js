@@ -1,12 +1,23 @@
 const urlParams = new URLSearchParams(window.location.search);
 const restaurantId = parseInt(urlParams.get('restaurantId')) || 1; 
 const tableNum = parseInt(urlParams.get('tableNum')) || 1; 
-const apiBaseUrl = "http://127.0.0.1:8000/api";
+const apiBaseUrl = "/api";
 let shoppingCart = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tableDisplay").innerText = `Table: ${tableNum}`;
     
+    fetch(`${apiBaseUrl}/config`)
+        .then(res => res.json())
+        .then(config => {
+            document.documentElement.style.setProperty('--primaryColor', config.themePrimary);
+            document.documentElement.style.setProperty('--secondaryColor', config.themeSecondary);
+            document.documentElement.style.setProperty('--backgroundColor', config.themeBackground);
+            document.getElementById("restaurantName").innerText = config.restaurantName;
+            document.getElementById("navRestaurantName").innerText = config.restaurantName;
+        })
+        .catch(err => console.error(err));
+
     const savedCartData = sessionStorage.getItem("activeShoppingCart");
     if(savedCartData) {
         shoppingCart = JSON.parse(savedCartData);
@@ -15,14 +26,11 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch(`${apiBaseUrl}/menu/${restaurantId}`)
         .then(res => res.json())
         .then(menu => {
-            document.getElementById("restaurantName").innerText = "Menu";
-            document.getElementById("navRestaurantName").innerText = "Menu";
             const grid = document.getElementById("menuGrid");
             grid.innerHTML = "";
             menu.forEach(item => {
                 const isStock = item.inStock === 1;
                 const priceFmt = item.price ? `$${item.price.toFixed(2)}` : 'N/A';
-                
                 const imageHtml = item.imageUrl ? 
                     `<img src="${item.imageUrl}" alt="${item.itemName}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 10px;">` 
                     : '';
@@ -118,7 +126,6 @@ function sendOrderToServer() {
             sessionStorage.removeItem("activeShoppingCart");
             document.getElementById("menuView").classList.add("hiddenView");
             document.getElementById("confirmationView").classList.remove("hiddenView");
-            
             const receiptDiv = document.getElementById("receiptItems");
             let finalTotal = 0;
             shoppingCart.forEach(i => {

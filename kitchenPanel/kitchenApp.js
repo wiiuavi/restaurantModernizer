@@ -1,6 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
 const restaurantId = parseInt(urlParams.get('restaurantId')) || 1; 
-const apiBaseUrl = "http://127.0.0.1:8000/api";
+const apiBaseUrl = "/api";
 
 let activeChefAuth = "";
 
