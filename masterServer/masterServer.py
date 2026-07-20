@@ -74,6 +74,21 @@ def setupDatabase():
             isCooked BOOLEAN NOT NULL DEFAULT 0
         )
     ''')
+    dbCursor.execute('''
+        CREATE TABLE IF NOT EXISTS Tags (
+            tagId INTEGER PRIMARY KEY AUTOINCREMENT,
+            restaurantId INTEGER,
+            tagName TEXT NOT NULL,
+            tagIcon TEXT
+        )
+    ''')
+    dbCursor.execute('''
+        CREATE TABLE IF NOT EXISTS ItemTags (
+            itemId INTEGER,
+            tagId INTEGER,
+            PRIMARY KEY (itemId, tagId)
+        )
+    ''')
     dbConn.commit()
     dbConn.close()
 
@@ -93,6 +108,7 @@ class ItemUpdateData(BaseModel):
     imageUrl: Optional[str] = None
     price: Optional[float] = None
     inStock: Optional[bool] = None
+    tagIds: Optional[List[int]] = None
 
 class OrderItemData(BaseModel):
     itemId: int
@@ -111,9 +127,15 @@ class NewItemData(BaseModel):
     imageUrl: Optional[str] = ""
     price: Optional[float] = None
     inStock: bool = True
+    tagIds: Optional[List[int]] = []
 
 class ToggleCookedData(BaseModel):
     isCooked: bool
+
+class NewTagData(BaseModel):
+    restaurantId: int
+    tagName: str
+    tagIcon: Optional[str] = ""
 
 @app.get("/api/config")
 def getPublicConfig():
@@ -138,8 +160,19 @@ def getMenu(restaurantId: int):
     dbCursor = dbConn.cursor()
     dbCursor.execute("SELECT * FROM MenuItems WHERE restaurantId = ?", (restaurantId,))
     menuRows = dbCursor.fetchall()
+    itemsList = []
+    for row in menuRows:
+        itemDict = dict(row)
+        dbCursor.execute("""
+            SELECT Tags.tagId, Tags.tagName, Tags.tagIcon 
+            FROM ItemTags 
+            JOIN Tags ON ItemTags.tagId = Tags.tagId 
+            WHERE ItemTags.itemId = ?
+        """, (itemDict["itemId"],))
+        itemDict["itemTags"] = [dict(r) for r in dbCursor.fetchall()]
+        itemsList.append(itemDict)
     dbConn.close()
-    return [dict(row) for row in menuRows]
+    return itemsList
 
 @app.put("/api/item/{itemId}", dependencies=[Depends(requireAdmin)])
 def updateMenuItem(itemId: int, updateData: ItemUpdateData):
@@ -159,6 +192,10 @@ def updateMenuItem(itemId: int, updateData: ItemUpdateData):
     currentPrice = dbCursor.fetchone()["price"]
     if currentPrice is None or currentPrice <= 0:
         dbCursor.execute("UPDATE MenuItems SET inStock = 0 WHERE itemId = ?", (itemId,))
+    if updateData.tagIds is not None:
+        dbCursor.execute("DELETE FROM ItemTags WHERE itemId = ?", (itemId,))
+        for tagId in updateData.tagIds:
+            dbCursor.execute("INSERT INTO ItemTags (itemId, tagId) VALUES (?, ?)", (itemId, tagId))
     dbConn.commit()
     dbConn.close()
     return {"status": "success"}
@@ -256,6 +293,9 @@ def createMenuItem(itemData: NewItemData):
         (itemData.restaurantId, itemData.itemName, itemData.itemDesc, itemData.imageUrl, itemData.price, int(finalStock))
     )
     newItemId = dbCursor.lastrowid
+    if itemData.tagIds:
+        for tagId in itemData.tagIds:
+            dbCursor.execute("INSERT INTO ItemTags (itemId, tagId) VALUES (?, ?)", (newItemId, tagId))
     dbConn.commit()
     dbConn.close()
     return {"status": "success", "itemId": newItemId}
@@ -265,6 +305,7 @@ def deleteMenuItem(itemId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
     dbCursor.execute("DELETE FROM MenuItems WHERE itemId = ?", (itemId,))
+    dbCursor.execute("DELETE FROM ItemTags WHERE itemId = ?", (itemId,))
     dbConn.commit()
     dbConn.close()
     return {"status": "success"}
@@ -303,6 +344,56 @@ def deleteOrder(orderId: int):
     dbConn.close()
     return {"status": "success"}
 
+@app.get("/api/tags/{restaurantId}")
+def getTags(restaurantId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    dbCursor.execute("SELECT * FROM Tags WHERE restaurantId = ?", (restaurantId,))
+    tagRows = dbCursor.fetchall()
+    dbConn.close()
+    return [dict(row) for row in tagRows]
+
+@app.post("/api/tag", dependencies=[Depends(requireAdmin)])
+def createTag(tagData: NewTagData):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    dbCursor.execute(
+        "INSERT INTO Tags (restaurantId, tagName, tagIcon) VALUES (?, ?, ?)",
+        (tagData.restaurantId, tagData.tagName, tagData.tagIcon)
+    )
+    newTagId = dbCursor.lastrowid
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success", "tagId": newTagId}
+
+@app.delete("/api/tag/{tagId}", dependencies=[Depends(requireAdmin)])
+def deleteTag(tagId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    dbCursor.execute("DELETE FROM Tags WHERE tagId = ?", (tagId,))
+    dbCursor.execute("DELETE FROM ItemTags WHERE tagId = ?", (tagId,))
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success"}
+
+@app.post("/api/itemtag/assign", dependencies=[Depends(requireAdmin)])
+def assignItemTag(itemId: int, tagId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    dbCursor.execute("INSERT OR IGNORE INTO ItemTags (itemId, tagId) VALUES (?, ?)", (itemId, tagId))
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success"}
+
+@app.post("/api/itemtag/remove", dependencies=[Depends(requireAdmin)])
+def removeItemTag(itemId: int, tagId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    dbCursor.execute("DELETE FROM ItemTags WHERE itemId = ? AND tagId = ?", (itemId, tagId))
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success"}
+
 app.mount("/menu", StaticFiles(directory="../customerPanel", html=True), name="customer")
 app.mount("/kitchen", StaticFiles(directory="../kitchenPanel", html=True), name="kitchen")
 app.mount("/management", StaticFiles(directory="../managementPanel", html=True), name="management")
@@ -312,3 +403,5 @@ if __name__ == "__main__":
     hostIp = os.getenv("HOST_IP", "0.0.0.0")
     portNum = int(os.getenv("PORT", "8000"))
     uvicorn.run("masterServer:app", host=hostIp, port=portNum, reload=True)
+
+#uvicorn masterServer:app --reload

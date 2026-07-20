@@ -21,6 +21,7 @@
             <h1>POS Till & Management Console</h1>
             <div class="headerControls">
                 <button class="actionBtn outlineBtn" onclick="toggleSection('menuManagementSection')">Toggle Menu Editor</button>
+                <button class="actionBtn outlineBtn" onclick="toggleSection('tagManagementSection')">Toggle Tag Editor</button>
                 <button class="actionBtn outlineBtn" onclick="toggleSection('historicalOrdersSection')">Toggle Order Logs</button>
             </div>
         </header>
@@ -34,9 +35,13 @@
                     <p>Select Item to Add:</p>
                     <select id="manualItemSelector" class="formInput"></select>
                     
-                    <div class="rowInputs">
-                        <input type="number" id="manualItemQuantity" placeholder="Qty" value="1" class="formInput shortInput">
-                        <input type="text" id="manualItemNotes" placeholder="Special Instructions" class="formInput longInput">
+                    <div class="rowInputs" style="align-items: center; margin-bottom: 12px;">
+                        <div class="qtyControlRow">
+                            <button class="qtyAdjustBtn" onclick="adjustMainQtyInput(-1)">-</button>
+                            <input type="number" id="manualItemQuantity" value="1" class="formInput shortInput" style="margin: 0; text-align: center; font-size: 1.2rem; height: 40px; width: 60px;" readonly>
+                            <button class="qtyAdjustBtn" onclick="adjustMainQtyInput(1)">+</button>
+                        </div>
+                        <input type="text" id="manualItemNotes" placeholder="Special Instructions" class="formInput longInput" style="margin: 0; height: 40px;">
                     </div>
                     <button class="actionBtn blueBtn fullWidth" onclick="addSelectedToManualCart()">Add to Active Cart</button>
                     
@@ -61,13 +66,45 @@
                     <input type="text" id="itemDescInput" placeholder="Description (Optional)" class="formInput">
                     <input type="text" id="itemImageInput" placeholder="Image URL (Optional)" class="formInput">
                     
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <p style="margin: 5px 0; font-weight: bold; font-size: 0.95rem;">Select Tags:</p>
+                    <div id="formTagsContainer" class="formTagsContainer"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
                         <button class="actionBtn greenBtn fullWidth" id="saveItemBtn" onclick="submitItemForm()">Save to Database</button>
                         <button class="actionBtn outlineBtn hiddenView" id="cancelEditBtn" onclick="resetItemForm()">Cancel</button>
                     </div>
                 </div>
                 
                 <div id="managementMenuContainer">Loading master list...</div>
+            </section>
+
+            <section class="managementSection hiddenView" id="tagManagementSection">
+                <h2>Menu Tags Database</h2>
+                <div class="formBox">
+                    <h3>Create New Tag</h3>
+                    <input type="text" id="newTagName" placeholder="Tag Name (e.g. Vegetarian)" class="formInput">
+                    <input type="text" id="newTagIcon" placeholder="Icon / Emoji (e.g. 🌱)" class="formInput">
+                    <button class="actionBtn greenBtn fullWidth" onclick="submitNewTag()">Create Tag</button>
+                </div>
+
+                <div class="tagConfigColumns">
+                    <div>
+                        <h3>Tags List</h3>
+                        <div id="tagItemsControlList">Loading tags...</div>
+                    </div>
+                    <div id="tagInspectionPanel" class="tagInspectionPanel hiddenView">
+                        <h3 id="inspectedTagName">Select a Tag</h3>
+                        <div class="formBox" style="margin-top: 10px;">
+                            <p style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px;">Add Item to Tag:</p>
+                            <div style="display: flex; gap: 10px;">
+                                <select id="tagAssignItemSelector" class="formInput" style="margin: 0;"></select>
+                                <button class="actionBtn blueBtn" onclick="submitItemTagAssignment()">Add</button>
+                            </div>
+                        </div>
+                        <p style="font-weight: bold; font-size: 0.95rem; margin-bottom: 5px;">Assigned Items:</p>
+                        <div id="inspectedTagItemsList">No items assigned.</div>
+                    </div>
+                </div>
             </section>
 
             <section class="managementSection hiddenView" id="historicalOrdersSection">

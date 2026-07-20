@@ -8,7 +8,7 @@
 </head>
 <body>
     <nav class="topNavBar">
-        <img src="logo.png" alt="Restaurant Logo" class="navLogo">
+        <div class="navLogoPlaceholder">LOGO</div>
         <div class="navRestaurantName" id="navRestaurantName">Loading...</div>
     </nav>
 
@@ -17,7 +17,14 @@
             <h1 id="restaurantName">Loading Menu...</h1>
             <p id="tableDisplay">Table: Detecting...</p>
         </div>
+
+        <div class="searchFilterSection">
+            <input type="text" id="menuSearchInput" class="menuSearchInput" placeholder="Search menu..." oninput="applyFilters()">
+            <div id="tagFilterRow" class="tagFilterRow"></div>
+        </div>
+
         <div id="menuGrid" class="menuGrid"></div>
+
         <div class="cartSection">
             <h2>Your Order</h2>
             <div id="cartItemsList"></div>

@@ -130,7 +130,7 @@ function sendOrderToServer() {
             let finalTotal = 0;
             shoppingCart.forEach(i => {
                 finalTotal += (i.price * i.quantity);
-                receiptDiv.innerHTML += `<div class="receiptLine"><span>${i.quantity}x ${i.itemName}</span> <span>$${(i.price * i.quantity).toFixed(2)}</span></div>`;
+                iptDiv.innerHTML += `<div class="receiptLine"><span>${i.quantity}x ${i.itemName}</span> <span>$${(i.price * i.quantity).toFixed(2)}</span></div>`;
             });
             document.getElementById("receiptTotal").innerText = `Total: $${finalTotal.toFixed(2)}`;
             shoppingCart = [];

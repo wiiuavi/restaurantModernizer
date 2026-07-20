@@ -87,7 +87,7 @@ function loadOrderQueue() {
                         <div class="orderHeader">
                             <span>Table ${order.tableNum}</span>
                             <span class="timerText">${timeString}</span>
-                            <span>#${order.orderId}</span>
+                            <span>~${order.orderId}</span>
                         </div>
                         <div>${itemsHtml}</div>
                         <button class="actionBtn greenBtn" style="width:100%; margin-top:15px;" onclick="completeOrder(${order.orderId})">Send / Complete</button>

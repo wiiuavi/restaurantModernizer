@@ -11,165 +11,264 @@
     --textColor: #2c3e50;
     --borderColor: #cbd5e1;
 }
-body { font-family: Arial, sans-serif;
-margin: 0;
-padding: 20px;
-background-color: var(--backgroundColor);
-color: var(--textColor);
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--backgroundColor);
+    color: var(--textColor);
 }
-.passwordOverlay { position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: rgba(44, 62, 80, 0.95);
-display: flex;
-justify-content: center;
-align-items: center;
-z-index: 9999;
+.passwordOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(44, 62, 80, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
-.loginBox { background: var(--surfaceColor);
-padding: 30px;
-border-radius: 8px;
-text-align: center;
-width: 300px;
-box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+.loginBox {
+    background: var(--surfaceColor);
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
-.managementPasswordInput { width: 90%;
-padding: 12px;
-margin: 15px 0;
-border: 1px solid var(--borderColor);
-border-radius: 4px;
+.managementPasswordInput {
+    width: 90%;
+    padding: 12px;
+    margin: 15px 0;
+    border: 1px solid var(--borderColor);
+    border-radius: 4px;
 }
-.errorMessage { color: var(--dangerColor);
-font-size: 0.9rem;
-margin-top: 10px;
+.errorMessage {
+    color: var(--dangerColor);
+    font-size: 0.9rem;
+    margin-top: 10px;
 }
-.hiddenView { display: none !important;
+.hiddenView {
+    display: none !important;
 }
-.fullWidth { width: 100%;
+.fullWidth {
+    width: 100%;
 }
-.managementHeader { text-align: center;
-margin-bottom: 30px;
+.managementHeader {
+    text-align: center;
+    margin-bottom: 30px;
 }
-.headerControls { display: flex;
-justify-content: center;
-gap: 15px;
-margin-top: 15px;
+.headerControls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
 }
-.managementGrid { display: grid;
-grid-template-columns: 1fr;
-gap: 30px;
-max-width: 1400px;
-margin: 0 auto;
-align-items: start;
+.managementGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: start;
 }
-@media (min-width: 992px) { .managementGrid { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-} }
-.managementSection { background: var(--surfaceColor);
-border-radius: 8px;
-padding: 25px;
-box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+@media (min-width: 992px) {
+    .managementGrid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
 }
-.formBox { background: var(--backgroundColor);
-padding: 15px;
-border-radius: 6px;
-border: 1px solid var(--borderColor);
-margin-bottom: 25px;
+.managementSection {
+    background: var(--surfaceColor);
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
-.formInput { width: 100%;
-padding: 10px;
-margin-bottom: 12px;
-border: 1px solid var(--borderColor);
-border-radius: 4px;
-box-sizing: border-box;
+.formBox {
+    background: var(--backgroundColor);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--borderColor);
+    margin-bottom: 25px;
 }
-.formInput:disabled { opacity: 0.7;
-cursor: not-allowed;
+.formInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid var(--borderColor);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.95rem;
 }
-.rowInputs { display: flex;
-gap: 10px;
+.formInput:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
-.shortInput { flex: 1;
+.formTagsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+    background: var(--surfaceColor);
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--borderColor);
 }
-.longInput { flex: 3;
+.formTagCheckboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: var(--backgroundColor);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--borderColor);
+    user-select: none;
 }
-.actionBtn { padding: 10px 16px;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-weight: bold;
-color: white;
-transition: 0.2s;
+.formTagCheckboxLabel input {
+    margin: 0;
+    cursor: pointer;
 }
-.greenBtn { background-color: var(--successColor);
-} .greenBtn:hover { background-color: var(--successHover);
+.rowInputs {
+    display: flex;
+    gap: 10px;
 }
-.redBtn { background-color: var(--dangerColor);
-} .redBtn:hover { background-color: var(--dangerHover);
+.shortInput {
+    flex: 1;
 }
-.blueBtn { background-color: var(--primaryColor);
-} .blueBtn:hover { background-color: var(--primaryHover);
+.longInput {
+    flex: 3;
 }
-.outlineBtn { background-color: transparent;
-border: 2px solid var(--darkColor);
-color: var(--darkColor);
-} .outlineBtn:hover { background-color: var(--darkColor);
-color: white;
+.actionBtn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    transition: 0.2s;
 }
-.databaseRow { display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 12px;
-border-bottom: 1px solid var(--borderColor);
+.greenBtn {
+    background-color: var(--successColor);
 }
-.itemDetails span { display: block;
+.greenBtn:hover {
+    background-color: var(--successHover);
 }
-.itemPriceTag { color: var(--successColor);
-font-weight: bold;
+.redBtn {
+    background-color: var(--dangerColor);
 }
-.manualCartPreview { background: var(--surfaceColor);
-border: 1px dashed var(--borderColor);
-padding: 10px;
-margin: 10px 0;
-font-size: 0.9rem;
-border-radius: 4px;
-max-height: 250px;
-overflow-y: auto;
+.redBtn:hover {
+    background-color: var(--dangerHover);
 }
-.managementOrderCard { background: var(--backgroundColor);
-border: 1px solid var(--borderColor);
-border-radius: 6px;
-padding: 15px;
-margin-bottom: 15px;
+.blueBtn {
+    background-color: var(--primaryColor);
 }
-.orderTitleRow { display: flex;
-justify-content: space-between;
-font-weight: bold;
-margin-bottom: 10px;
-border-bottom: 1px solid var(--borderColor);
-padding-bottom: 5px;}
-.qtyControlRow { display: flex;
-align-items: center;
-gap: 8px;
+.blueBtn:hover {
+    background-color: var(--primaryHover);
 }
-.qtyAdjustBtn { background-color: var(--borderColor);
-color: var(--textColor);
-border: none;
-border-radius: 4px;
-width: 40px;
-height: 40px;
-font-size: 1.5rem;
-font-weight: bold;
-cursor: pointer;
-display: flex;
-justify-content: center;
-align-items: center;
+.outlineBtn {
+    background-color: transparent;
+    border: 2px solid var(--darkColor);
+    color: var(--darkColor);
 }
-.qtyAdjustBtn:active { opacity: 0.7;
+.outlineBtn:hover {
+    background-color: var(--darkColor);
+    color: white;
 }
-.qtyLabel { font-size: 1.2rem;
-font-weight: bold;
-min-width: 25px;
-text-align: center;
+.databaseRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--borderColor);
+}
+.itemDetails span {
+    display: block;
+}
+.itemPriceTag {
+    color: var(--successColor);
+    font-weight: bold;
+}
+.manualCartPreview {
+    background: var(--surfaceColor);
+    border: 1px dashed var(--borderColor);
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+.managementOrderCard {
+    background: var(--backgroundColor);
+    border: 1px solid var(--borderColor);
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.orderTitleRow {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--borderColor);
+    padding-bottom: 5px;
+}
+.qtyControlRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.qtyAdjustBtn {
+    background-color: var(--borderColor);
+    color: var(--textColor);
+    border: none;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.qtyAdjustBtn:active {
+    opacity: 0.7;
+}
+.qtyLabel {
+    font-size: 1.2rem;
+    font-weight: bold;
+    min-width: 25px;
+    text-align: center;
+}
+.tagConfigColumns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+@media (min-width: 768px) {
+    .tagConfigColumns {
+        grid-template-columns: 1fr 1.2fr;
+    }
+}
+.tagInspectionPanel {
+    background: var(--backgroundColor);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--borderColor);
+}
+.itemTagConfigBadge {
+    background: var(--backgroundColor);
+    border: 1px solid var(--borderColor);
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
 }

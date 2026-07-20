@@ -4,9 +4,11 @@ const apiBaseUrl = "/api";
 
 let activeAdminAuth = "";
 let masterMenuArray = [];
+let masterTagsArray = [];
 let localManualCart = [];
 let globalOrdersList = [];
 let activeEditOrderId = null;
+let activeInspectedTagId = null;
 
 function verifyManagementPassword() {
     const attemptedPin = document.getElementById("managementPasswordInput").value;
@@ -35,6 +37,7 @@ window.toggleSection = toggleSection;
 
 function refreshManagementDashboard() {
     loadMasterMenu();
+    loadMasterTags();
     loadAllHistoricalOrders();
 }
 
@@ -45,8 +48,72 @@ function loadMasterMenu() {
             masterMenuArray = menuData;
             renderMenuControlList();
             populateManualOrderDropdown();
+            populateInspectionItemDropdown();
+            renderFormTagsContainer();
         })
         .catch(err => console.error(err));
+}
+
+function loadMasterTags() {
+    fetch(`${apiBaseUrl}/tags/${restaurantId}`)
+        .then(res => res.json())
+        .then(tags => {
+            masterTagsArray = tags;
+            renderTagsControlList();
+            renderFormTagsContainer();
+            if (activeInspectedTagId !== null) {
+                inspectTag(activeInspectedTagId);
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+function renderTagsControlList() {
+    const container = document.getElementById("tagItemsControlList");
+    container.innerHTML = "";
+    
+    if (masterTagsArray.length === 0) {
+        container.innerHTML = "<p>No custom tags created.</p>";
+        return;
+    }
+
+    masterTagsArray.forEach(tag => {
+        const row = document.createElement("div");
+        row.className = "databaseRow";
+        row.style.cursor = "pointer";
+        row.onclick = (e) => {
+            if(e.target.tagName !== "BUTTON") {
+                inspectTag(tag.tagId);
+            }
+        };
+        row.innerHTML = `
+            <div>
+                <strong>${tag.tagIcon || ''} ${tag.tagName}</strong>
+            </div>
+            <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteTag(${tag.tagId})">Delete</button>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function renderFormTagsContainer() {
+    const container = document.getElementById("formTagsContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (masterTagsArray.length === 0) {
+        container.innerHTML = "<span style='font-size: 0.9rem; color: var(--mutedTextColor);'>Create tags in the Tag Editor first.</span>";
+        return;
+    }
+
+    masterTagsArray.forEach(tag => {
+        container.innerHTML += `
+            <label class="formTagCheckboxLabel">
+                <input type="checkbox" name="itemFormTags" value="${tag.tagId}">
+                <span>${tag.tagIcon || ''} ${tag.tagName}</span>
+            </label>
+        `;
+    });
 }
 
 function renderMenuControlList() {
@@ -57,11 +124,22 @@ function renderMenuControlList() {
         const priceStr = item.price ? `$${item.price.toFixed(2)}` : 'No Price (OOS)';
         const row = document.createElement("div");
         row.className = "databaseRow";
+        
+        let tagsHtml = "";
+        if (item.itemTags && item.itemTags.length > 0) {
+            tagsHtml = "<div style='display:flex; flex-wrap:wrap; gap:4px;'>";
+            item.itemTags.forEach(t => {
+                tagsHtml += `<span class="itemTagConfigBadge">${t.tagIcon || ''} ${t.tagName}</span>`;
+            });
+            tagsHtml += "</div>";
+        }
+
         row.innerHTML = `
             <div class="itemDetails">
                 <strong>${item.itemName}</strong>
                 <span class="itemPriceTag">${priceStr}</span>
                 <span style="font-size: 0.85rem; color:#7f8c8d;">${item.itemDesc || ''}</span>
+                ${tagsHtml}
             </div>
             <div style="display:flex; gap:5px; flex-direction:column;">
                 <button class="actionBtn blueBtn" style="padding:5px;" onclick="loadItemIntoEditor(${item.itemId})">Edit</button>
@@ -83,6 +161,12 @@ function loadItemIntoEditor(itemId) {
     document.getElementById("itemDescInput").value = item.itemDesc || "";
     document.getElementById("itemImageInput").value = item.imageUrl || "";
 
+    const checkboxes = document.getElementsByName("itemFormTags");
+    checkboxes.forEach(cb => {
+        const tagId = parseInt(cb.value);
+        cb.checked = item.itemTags && item.itemTags.some(t => t.tagId === tagId);
+    });
+
     document.getElementById("saveItemBtn").innerText = "Update Item";
     document.getElementById("cancelEditBtn").classList.remove("hiddenView");
     document.getElementById("menuManagementSection").classList.remove("hiddenView");
@@ -96,6 +180,10 @@ function resetItemForm() {
     document.getElementById("itemPriceInput").value = "";
     document.getElementById("itemDescInput").value = "";
     document.getElementById("itemImageInput").value = "";
+    
+    const checkboxes = document.getElementsByName("itemFormTags");
+    checkboxes.forEach(cb => cb.checked = false);
+
     document.getElementById("saveItemBtn").innerText = "Save to Database";
     document.getElementById("cancelEditBtn").classList.add("hiddenView");
 }
@@ -110,13 +198,20 @@ function submitItemForm() {
 
     if (!nameInput.trim()) return alert("Specify an item name.");
 
+    const checkboxes = document.getElementsByName("itemFormTags");
+    const checkedTagIds = [];
+    checkboxes.forEach(cb => {
+        if (cb.checked) checkedTagIds.push(parseInt(cb.value));
+    });
+
     const payload = {
         restaurantId: restaurantId,
         itemName: nameInput,
         itemDesc: descInput,
         imageUrl: imageInput,
         price: priceInput,
-        inStock: true
+        inStock: true,
+        tagIds: checkedTagIds
     };
 
     if (editId) {
@@ -150,6 +245,123 @@ function completelyPurgeItem(itemId) {
 }
 window.completelyPurgeItem = completelyPurgeItem;
 
+function submitNewTag() {
+    const tagName = document.getElementById("newTagName").value.trim();
+    const tagIcon = document.getElementById("newTagIcon").value.trim();
+    if (!tagName) return alert("Please specify a tag name.");
+
+    const payload = {
+        restaurantId: restaurantId,
+        tagName: tagName,
+        tagIcon: tagIcon
+    };
+
+    fetch(`${apiBaseUrl}/tag`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "adminAuth": activeAdminAuth },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(() => {
+        document.getElementById("newTagName").value = "";
+        document.getElementById("newTagIcon").value = "";
+        loadMasterTags();
+    })
+    .catch(err => console.error(err));
+}
+window.submitNewTag = submitNewTag;
+
+function deleteTag(tagId) {
+    if (!confirm("Are you sure you want to delete this tag? All item assignments will be removed.")) return;
+    fetch(`${apiBaseUrl}/tag/${tagId}`, {
+        method: "DELETE",
+        headers: { "adminAuth": activeAdminAuth }
+    })
+    .then(() => {
+        if(activeInspectedTagId === tagId) {
+            activeInspectedTagId = null;
+            document.getElementById("tagInspectionPanel").classList.add("hiddenView");
+        }
+        loadMasterTags();
+        loadMasterMenu();
+    })
+    .catch(err => console.error(err));
+}
+window.deleteTag = deleteTag;
+
+function inspectTag(tagId) {
+    activeInspectedTagId = tagId;
+    const tag = masterTagsArray.find(t => t.tagId === tagId);
+    if (!tag) return;
+
+    document.getElementById("inspectedTagName").innerText = `Tag: ${tag.tagIcon || ''} ${tag.tagName}`;
+    document.getElementById("tagInspectionPanel").classList.remove("hiddenView");
+
+    const assignedContainer = document.getElementById("inspectedTagItemsList");
+    assignedContainer.innerHTML = "";
+
+    const assignedItems = masterMenuArray.filter(item => 
+        item.itemTags && item.itemTags.some(t => t.tagId === tagId)
+    );
+
+    if (assignedItems.length === 0) {
+        assignedContainer.innerHTML = "<p style='font-size:0.9rem; color:var(--textColor);'>No items assigned to this tag.</p>";
+    } else {
+        assignedItems.forEach(item => {
+            assignedContainer.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; background:#fff; padding:6px 10px; border-radius:4px; border:1px solid var(--borderColor);">
+                    <span style="font-size:0.95rem;">${item.itemName}</span>
+                    <button class="actionBtn redBtn" style="padding:2px 6px; font-size:0.75rem;" onclick="submitItemTagRemoval(${item.itemId}, ${tagId})">Remove</button>
+                </div>
+            `;
+        });
+    }
+
+    const select = document.getElementById("tagAssignItemSelector");
+    select.innerHTML = "";
+    
+    const unassignedItems = masterMenuArray.filter(item => 
+        !item.itemTags || !item.itemTags.some(t => t.tagId === tagId)
+    );
+
+    if(unassignedItems.length === 0) {
+        select.innerHTML = "<option value=''>All items assigned</option>";
+    } else {
+        unassignedItems.forEach(item => {
+            select.innerHTML += `<option value="${item.itemId}">${item.itemName}</option>`;
+        });
+    }
+}
+window.inspectTag = inspectTag;
+
+function submitItemTagAssignment() {
+    const select = document.getElementById("tagAssignItemSelector");
+    const itemId = parseInt(select.value);
+    if(!itemId || !activeInspectedTagId) return;
+
+    fetch(`${apiBaseUrl}/itemtag/assign?itemId=${itemId}&tagId=${activeInspectedTagId}`, {
+        method: "POST",
+        headers: { "adminAuth": activeAdminAuth }
+    })
+    .then(() => {
+        loadMasterMenu();
+    })
+    .catch(err => console.error(err));
+}
+window.submitItemTagAssignment = submitItemTagAssignment;
+
+function submitItemTagRemoval(itemId, tagId) {
+    fetch(`${apiBaseUrl}/itemtag/remove?itemId=${itemId}&tagId=${tagId}`, {
+        method: "POST",
+        headers: { "adminAuth": activeAdminAuth }
+    })
+    .then(() => {
+        loadMasterMenu();
+    })
+    .catch(err => console.error(err));
+}
+window.submitItemTagRemoval = submitItemTagRemoval;
+
 function populateManualOrderDropdown() {
     const selector = document.getElementById("manualItemSelector");
     selector.innerHTML = "";
@@ -162,6 +374,24 @@ function populateManualOrderDropdown() {
         selector.appendChild(option);
     });
 }
+
+function populateInspectionItemDropdown() {
+    const select = document.getElementById("tagAssignItemSelector");
+    if (!select) return;
+    select.innerHTML = "";
+    masterMenuArray.forEach(item => {
+        select.innerHTML += `<option value="${item.itemId}">${item.itemName}</option>`;
+    });
+}
+
+function adjustMainQtyInput(amount) {
+    const qtyInput = document.getElementById("manualItemQuantity");
+    let currentQty = parseInt(qtyInput.value) || 1;
+    currentQty += amount;
+    if (currentQty < 1) currentQty = 1;
+    qtyInput.value = currentQty;
+}
+window.adjustMainQtyInput = adjustMainQtyInput;
 
 function addSelectedToManualCart() {
     const selector = document.getElementById("manualItemSelector");
@@ -207,9 +437,13 @@ function updateManualCartUI() {
                 <strong>${item.itemName}</strong>
                 <span>$${lineTotal.toFixed(2)} <button onclick="removeFromManualCart(${index})" style="color:red; cursor:pointer; border:none; background:none; font-weight:bold; font-size:1rem;">X</button></span>
             </div>
-            <div style="display:flex; gap: 10px;">
-                <input type="number" class="formInput" style="width: 60px; margin: 0; padding: 6px;" value="${item.quantity}" onchange="updateCartItemQuantity(${index}, this.value)">
-                <input type="text" class="formInput" style="flex: 1; margin: 0; padding: 6px;" placeholder="Add notes..." value="${item.specialNotes || ''}" onchange="updateCartItemNote(${index}, this.value)">
+            <div style="display:flex; gap: 10px; align-items: center;">
+                <div class="qtyControlRow">
+                    <button class="qtyAdjustBtn" onclick="modifyManualCartQuantity(${index}, -1)">-</button>
+                    <span class="qtyLabel">${item.quantity}</span>
+                    <button class="qtyAdjustBtn" onclick="modifyManualCartQuantity(${index}, 1)">+</button>
+                </div>
+                <input type="text" class="formInput" style="flex: 1; margin: 0; padding: 10px; font-size: 1rem;" placeholder="Add notes..." value="${item.specialNotes || ''}" onchange="updateCartItemNote(${index}, this.value)">
             </div>
         </div>`;
     });
@@ -218,16 +452,14 @@ function updateManualCartUI() {
     document.getElementById("manualCartTotal").innerText = `Total: $${total.toFixed(2)}`;
 }
 
-function updateCartItemQuantity(index, newQuantity) {
-    const qty = parseInt(newQuantity);
-    if (qty > 0) {
-        localManualCart[index].quantity = qty;
-    } else {
-        localManualCart[index].quantity = 1;
+function modifyManualCartQuantity(index, amount) {
+    const newQty = localManualCart[index].quantity + amount;
+    if (newQty > 0) {
+        localManualCart[index].quantity = newQty;
     }
     updateManualCartUI();
 }
-window.updateCartItemQuantity = updateCartItemQuantity;
+window.modifyManualCartQuantity = modifyManualCartQuantity;
 
 function updateCartItemNote(index, newNoteText) {
     localManualCart[index].specialNotes = newNoteText;
