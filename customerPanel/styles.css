@@ -46,16 +46,33 @@ body {
     padding: 0 20px;
     box-sizing: border-box;
 }
+.searchForm {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
 .menuSearchInput {
-    width: 100%;
+    flex: 1;
     padding: 12px;
     border: 1px solid var(--borderColor);
     border-radius: 8px;
     font-size: 1rem;
     box-sizing: border-box;
-    margin-bottom: 10px;
     outline: none;
     background: var(--surfaceColor);
+}
+.searchBtn {
+    background-color: var(--primaryColor);
+    color: var(--surfaceColor);
+    border: none;
+    border-radius: 8px;
+    padding: 0 20px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+}
+.searchBtn:active {
+    background-color: var(--primaryHover);
 }
 .tagFilterRow {
     display: flex;
@@ -85,6 +102,12 @@ body {
     background-color: var(--primaryColor);
     color: #ffffff;
     border-color: var(--primaryColor);
+}
+.tagIconImg {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    vertical-align: middle;
 }
 .menuGrid {
     display: grid;

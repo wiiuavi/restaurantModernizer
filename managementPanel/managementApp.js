@@ -19,21 +19,36 @@ function verifyManagementPassword() {
                 activeAdminAuth = attemptedPin;
                 document.getElementById("passwordOverlay").classList.add("hiddenView");
                 document.getElementById("managementDashboardContent").classList.remove("hiddenView");
+                switchTab('posTillSection');
                 refreshManagementDashboard();
                 setInterval(loadAllHistoricalOrders, 7000);
             } else {
                 document.getElementById("errorMessage").innerText = "Invalid PIN.";
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error(err);
+            document.getElementById("errorMessage").innerText = "Connection failed! Ensure the Python server is running and you are accessing via http://localhost:8000.";
+        });
 }
 window.verifyManagementPassword = verifyManagementPassword;
 
-function toggleSection(sectionId) {
-    const section = document.getElementById(sectionId);
-    section.classList.toggle("hiddenView");
+function switchTab(sectionId) {
+    const sections = ['posTillSection', 'menuManagementSection', 'tagManagementSection', 'historicalOrdersSection'];
+    sections.forEach(id => {
+        document.getElementById(id).classList.add('hiddenView');
+        const tabBtn = document.getElementById(`tab_${id}`);
+        if(tabBtn) tabBtn.classList.remove('activeTab');
+    });
+    document.getElementById(sectionId).classList.remove('hiddenView');
+    const activeBtn = document.getElementById(`tab_${sectionId}`);
+    if(activeBtn) activeBtn.classList.add('activeTab');
 }
-window.toggleSection = toggleSection;
+window.switchTab = switchTab;
+
+function renderTagIcon(url) {
+    return url ? `<img src="${url}" class="tagIconImg" alt="tag">` : '';
+}
 
 function refreshManagementDashboard() {
     loadMasterMenu();
@@ -88,7 +103,7 @@ function renderTagsControlList() {
         };
         row.innerHTML = `
             <div>
-                <strong>${tag.tagIcon || ''} ${tag.tagName}</strong>
+                <strong>${renderTagIcon(tag.tagIcon)} ${tag.tagName}</strong>
             </div>
             <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteTag(${tag.tagId})">Delete</button>
         `;
@@ -110,7 +125,7 @@ function renderFormTagsContainer() {
         container.innerHTML += `
             <label class="formTagCheckboxLabel">
                 <input type="checkbox" name="itemFormTags" value="${tag.tagId}">
-                <span>${tag.tagIcon || ''} ${tag.tagName}</span>
+                <span>${renderTagIcon(tag.tagIcon)} ${tag.tagName}</span>
             </label>
         `;
     });
@@ -129,7 +144,7 @@ function renderMenuControlList() {
         if (item.itemTags && item.itemTags.length > 0) {
             tagsHtml = "<div style='display:flex; flex-wrap:wrap; gap:4px;'>";
             item.itemTags.forEach(t => {
-                tagsHtml += `<span class="itemTagConfigBadge">${t.tagIcon || ''} ${t.tagName}</span>`;
+                tagsHtml += `<span class="itemTagConfigBadge">${renderTagIcon(t.tagIcon)} ${t.tagName}</span>`;
             });
             tagsHtml += "</div>";
         }
@@ -169,7 +184,7 @@ function loadItemIntoEditor(itemId) {
 
     document.getElementById("saveItemBtn").innerText = "Update Item";
     document.getElementById("cancelEditBtn").classList.remove("hiddenView");
-    document.getElementById("menuManagementSection").classList.remove("hiddenView");
+    switchTab('menuManagementSection');
 }
 window.loadItemIntoEditor = loadItemIntoEditor;
 
@@ -279,8 +294,7 @@ function deleteTag(tagId) {
     })
     .then(() => {
         if(activeInspectedTagId === tagId) {
-            activeInspectedTagId = null;
-            document.getElementById("tagInspectionPanel").classList.add("hiddenView");
+            closeTagModal();
         }
         loadMasterTags();
         loadMasterMenu();
@@ -294,8 +308,8 @@ function inspectTag(tagId) {
     const tag = masterTagsArray.find(t => t.tagId === tagId);
     if (!tag) return;
 
-    document.getElementById("inspectedTagName").innerText = `Tag: ${tag.tagIcon || ''} ${tag.tagName}`;
-    document.getElementById("tagInspectionPanel").classList.remove("hiddenView");
+    document.getElementById("inspectedTagName").innerHTML = `Tag Editor: ${renderTagIcon(tag.tagIcon)} ${tag.tagName}`;
+    document.getElementById("tagInspectionModal").classList.remove("hiddenView");
 
     const assignedContainer = document.getElementById("inspectedTagItemsList");
     assignedContainer.innerHTML = "";
@@ -333,6 +347,12 @@ function inspectTag(tagId) {
     }
 }
 window.inspectTag = inspectTag;
+
+function closeTagModal() {
+    activeInspectedTagId = null;
+    document.getElementById("tagInspectionModal").classList.add("hiddenView");
+}
+window.closeTagModal = closeTagModal;
 
 function submitItemTagAssignment() {
     const select = document.getElementById("tagAssignItemSelector");
@@ -593,6 +613,7 @@ function loadOrderIntoEditor(orderId) {
     updateManualCartUI();
     document.getElementById("submitCartBtn").innerText = "Update Existing Order";
     document.getElementById("cancelEditCartBtn").classList.remove("hiddenView");
+    switchTab('posTillSection');
 }
 window.loadOrderIntoEditor = loadOrderIntoEditor;
 

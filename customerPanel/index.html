@@ -19,7 +19,10 @@
         </div>
 
         <div class="searchFilterSection">
-            <input type="text" id="menuSearchInput" class="menuSearchInput" placeholder="Search menu..." oninput="applyFilters()">
+            <form class="searchForm" onsubmit="event.preventDefault(); applyFilters();">
+                <input type="text" id="menuSearchInput" class="menuSearchInput" placeholder="Search menu..." oninput="applyFilters()">
+                <button type="submit" class="searchBtn">Search</button>
+            </form>
             <div id="tagFilterRow" class="tagFilterRow"></div>
         </div>
 

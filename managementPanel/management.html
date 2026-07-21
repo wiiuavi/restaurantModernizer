@@ -16,13 +16,32 @@
         </div>
     </div>
 
+    <div id="tagInspectionModal" class="modalOverlay hiddenView">
+        <div class="modalBox">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="inspectedTagName" style="margin: 0;">Select a Tag</h3>
+                <button class="actionBtn redBtn" onclick="closeTagModal()">Close</button>
+            </div>
+            <div class="formBox">
+                <p style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; text-align: left;">Add Item to Tag:</p>
+                <div style="display: flex; gap: 10px;">
+                    <select id="tagAssignItemSelector" class="formInput" style="margin: 0;"></select>
+                    <button class="actionBtn blueBtn" onclick="submitItemTagAssignment()">Add</button>
+                </div>
+            </div>
+            <p style="font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; text-align: left;">Assigned Items:</p>
+            <div id="inspectedTagItemsList" style="text-align: left;">No items assigned.</div>
+        </div>
+    </div>
+
     <div id="managementDashboardContent" class="hiddenView">
         <header class="managementHeader">
             <h1>POS Till & Management Console</h1>
             <div class="headerControls">
-                <button class="actionBtn outlineBtn" onclick="toggleSection('menuManagementSection')">Toggle Menu Editor</button>
-                <button class="actionBtn outlineBtn" onclick="toggleSection('tagManagementSection')">Toggle Tag Editor</button>
-                <button class="actionBtn outlineBtn" onclick="toggleSection('historicalOrdersSection')">Toggle Order Logs</button>
+                <button class="actionBtn outlineBtn tabBtn" id="tab_posTillSection" onclick="switchTab('posTillSection')">Active Till</button>
+                <button class="actionBtn outlineBtn tabBtn" id="tab_menuManagementSection" onclick="switchTab('menuManagementSection')">Menu Editor</button>
+                <button class="actionBtn outlineBtn tabBtn" id="tab_tagManagementSection" onclick="switchTab('tagManagementSection')">Tag Editor</button>
+                <button class="actionBtn outlineBtn tabBtn" id="tab_historicalOrdersSection" onclick="switchTab('historicalOrdersSection')">Order Logs</button>
             </div>
         </header>
 
@@ -83,28 +102,11 @@
                 <div class="formBox">
                     <h3>Create New Tag</h3>
                     <input type="text" id="newTagName" placeholder="Tag Name (e.g. Vegetarian)" class="formInput">
-                    <input type="text" id="newTagIcon" placeholder="Icon / Emoji (e.g. 🌱)" class="formInput">
+                    <input type="text" id="newTagIcon" placeholder="Image URL (Optional Icon)" class="formInput">
                     <button class="actionBtn greenBtn fullWidth" onclick="submitNewTag()">Create Tag</button>
                 </div>
-
-                <div class="tagConfigColumns">
-                    <div>
-                        <h3>Tags List</h3>
-                        <div id="tagItemsControlList">Loading tags...</div>
-                    </div>
-                    <div id="tagInspectionPanel" class="tagInspectionPanel hiddenView">
-                        <h3 id="inspectedTagName">Select a Tag</h3>
-                        <div class="formBox" style="margin-top: 10px;">
-                            <p style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px;">Add Item to Tag:</p>
-                            <div style="display: flex; gap: 10px;">
-                                <select id="tagAssignItemSelector" class="formInput" style="margin: 0;"></select>
-                                <button class="actionBtn blueBtn" onclick="submitItemTagAssignment()">Add</button>
-                            </div>
-                        </div>
-                        <p style="font-weight: bold; font-size: 0.95rem; margin-bottom: 5px;">Assigned Items:</p>
-                        <div id="inspectedTagItemsList">No items assigned.</div>
-                    </div>
-                </div>
+                <h3>Current Tags List</h3>
+                <div id="tagItemsControlList">Loading tags...</div>
             </section>
 
             <section class="managementSection hiddenView" id="historicalOrdersSection">

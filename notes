@@ -1,0 +1,4 @@
+uvicorn masterServer:app --reload
+http://localhost:8000/menu/index.html?restaurantId=1&tableNum=4
+http://localhost:8000/kitchen/kitchen.html
+http://localhost:8000/management/management.html
