@@ -10,6 +10,9 @@ let globalOrdersList = [];
 let activeEditOrderId = null;
 let activeInspectedTagId = null;
 
+let analyticsSortCol = 'revenue';
+let analyticsSortDesc = true;
+
 function verifyManagementPassword() {
     const attemptedPin = document.getElementById("managementPasswordInput").value;
     
@@ -34,15 +37,21 @@ function verifyManagementPassword() {
 window.verifyManagementPassword = verifyManagementPassword;
 
 function switchTab(sectionId) {
-    const sections = ['posTillSection', 'menuManagementSection', 'tagManagementSection', 'historicalOrdersSection'];
+    const sections = ['posTillSection', 'menuManagementSection', 'tagManagementSection', 'historicalOrdersSection', 'analyticsSection'];
     sections.forEach(id => {
-        document.getElementById(id).classList.add('hiddenView');
+        const sec = document.getElementById(id);
+        if(sec) sec.classList.add('hiddenView');
         const tabBtn = document.getElementById(`tab_${id}`);
         if(tabBtn) tabBtn.classList.remove('activeTab');
     });
-    document.getElementById(sectionId).classList.remove('hiddenView');
+    const targetSec = document.getElementById(sectionId);
+    if(targetSec) targetSec.classList.remove('hiddenView');
     const activeBtn = document.getElementById(`tab_${sectionId}`);
     if(activeBtn) activeBtn.classList.add('activeTab');
+
+    if(sectionId === 'analyticsSection') {
+        renderAnalytics();
+    }
 }
 window.switchTab = switchTab;
 
@@ -76,6 +85,7 @@ function loadMasterTags() {
             masterTagsArray = tags;
             renderTagsControlList();
             renderFormTagsContainer();
+            populateAnalyticsTagFilter();
             if (activeInspectedTagId !== null) {
                 inspectTag(activeInspectedTagId);
             }
@@ -365,6 +375,7 @@ function submitItemTagAssignment() {
     })
     .then(() => {
         loadMasterMenu();
+        inspectTag(activeInspectedTagId);
     })
     .catch(err => console.error(err));
 }
@@ -377,6 +388,9 @@ function submitItemTagRemoval(itemId, tagId) {
     })
     .then(() => {
         loadMasterMenu();
+        if(activeInspectedTagId === tagId){
+            inspectTag(tagId);
+        }
     })
     .catch(err => console.error(err));
 }
@@ -528,6 +542,7 @@ function submitManualCartAsOrder() {
         }).then(() => {
             localManualCart = [];
             tableInput.value = "";
+            document.getElementById("manualItemQuantity").value = "1";
             updateManualCartUI();
             loadAllHistoricalOrders();
         });
@@ -536,11 +551,23 @@ function submitManualCartAsOrder() {
 window.submitManualCartAsOrder = submitManualCartAsOrder;
 
 function loadAllHistoricalOrders() {
-    fetch(`${apiBaseUrl}/orders/all/${restaurantId}`, { headers: { "adminAuth": activeAdminAuth } })
+    const startDate = document.getElementById("analyticsStartDate") ? document.getElementById("analyticsStartDate").value : "";
+    const endDate = document.getElementById("analyticsEndDate") ? document.getElementById("analyticsEndDate").value : "";
+    
+    let fetchUrl = `${apiBaseUrl}/orders/all/${restaurantId}`;
+    const queryParams = [];
+    if (startDate) queryParams.push(`startDate=${startDate}`);
+    if (endDate) queryParams.push(`endDate=${endDate}`);
+    if (queryParams.length > 0) {
+        fetchUrl += "?" + queryParams.join("&");
+    }
+
+    fetch(fetchUrl, { headers: { "adminAuth": activeAdminAuth } })
         .then(res => res.json())
         .then(allOrders => {
             globalOrdersList = allOrders;
             renderAllOrdersList(allOrders);
+            renderAnalytics();
         });
 }
 
@@ -567,6 +594,11 @@ function renderAllOrdersList(allOrders) {
             linesHtml += `<div>• ${item.quantity}x ${item.itemName} ($${lineTotal.toFixed(2)}) <i style="color:#7f8c8d;">${item.specialNotes || ''}</i></div>`;
         });
 
+        let completeBtnHtml = "";
+        if (order.orderStatus !== 'Completed') {
+            completeBtnHtml = `<button class="actionBtn greenBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="markOrderCompletePos(${order.orderId})">Complete</button>`;
+        }
+
         card.innerHTML = `
             <div class="orderTitleRow">
                 <span>Order #${order.orderId} (Table ${order.tableNum})</span>
@@ -574,13 +606,22 @@ function renderAllOrdersList(allOrders) {
             </div>
             <div style="margin-bottom: 12px;">${linesHtml}</div>
             <div style="display:flex; gap:10px;">
-                <button class="actionBtn blueBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="loadOrderIntoEditor(${order.orderId})">Edit Order</button>
-                <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="cancelAndPurgeOrder(${order.orderId})">Void Order</button>
+                ${completeBtnHtml}
+                <button class="actionBtn blueBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="loadOrderIntoEditor(${order.orderId})">Edit</button>
+                <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="cancelAndPurgeOrder(${order.orderId})">Void</button>
             </div>
         `;
         container.appendChild(card);
     });
 }
+
+function markOrderCompletePos(orderId) {
+    fetch(`${apiBaseUrl}/order/${orderId}/completePos`, { 
+        method: "PUT",
+        headers: { "adminAuth": activeAdminAuth }
+    }).then(() => loadAllHistoricalOrders());
+}
+window.markOrderCompletePos = markOrderCompletePos;
 
 function cancelAndPurgeOrder(orderId) {
     if (!confirm("Void this transaction entirely?")) return;
@@ -628,6 +669,155 @@ function cancelOrderEdit() {
     
     document.getElementById("submitCartBtn").innerText = "Submit Order to Kitchen";
     document.getElementById("cancelEditCartBtn").classList.add("hiddenView");
+    document.getElementById("manualItemQuantity").value = "1";
     updateManualCartUI();
 }
 window.cancelOrderEdit = cancelOrderEdit;
+
+function populateAnalyticsTagFilter() {
+    const select = document.getElementById("analyticsTagFilter");
+    if (!select) return;
+    select.innerHTML = '<option value="">All Tags</option>';
+    masterTagsArray.forEach(tag => {
+        select.innerHTML += `<option value="${tag.tagId}">${tag.tagName}</option>`;
+    });
+}
+
+function resetAnalyticsFilters() {
+    document.getElementById("analyticsStartDate").value = "";
+    document.getElementById("analyticsEndDate").value = "";
+    document.getElementById("analyticsTagFilter").value = "";
+    loadAllHistoricalOrders();
+}
+window.resetAnalyticsFilters = resetAnalyticsFilters;
+
+function sortAnalytics(col) {
+    if(analyticsSortCol === col) {
+        analyticsSortDesc = !analyticsSortDesc;
+    } else {
+        analyticsSortCol = col;
+        analyticsSortDesc = true;
+    }
+    renderAnalytics();
+}
+window.sortAnalytics = sortAnalytics;
+
+function renderAnalytics() {
+    const section = document.getElementById("analyticsSection");
+    if(!section || section.classList.contains("hiddenView")) return;
+
+    const tagFilterInput = document.getElementById("analyticsTagFilter").value;
+
+    let filteredOrders = globalOrdersList;
+
+    let itemStats = {};
+    let dailyStats = {};
+    let totalRev = 0;
+    let totalOrd = filteredOrders.length;
+
+    filteredOrders.forEach(order => {
+        const dateKey = order.orderTime.split('T')[0];
+        if (!dailyStats[dateKey]) {
+            dailyStats[dateKey] = { orders: 0, revenue: 0 };
+        }
+        dailyStats[dateKey].orders += 1;
+
+        let orderRev = 0;
+        order.items.forEach(item => {
+            const lineRev = (item.price || 0) * item.quantity;
+            orderRev += lineRev;
+
+            if (!itemStats[item.itemId]) {
+                const masterItem = masterMenuArray.find(m => m.itemId === item.itemId);
+                itemStats[item.itemId] = {
+                    name: item.itemName,
+                    qty: 0,
+                    revenue: 0,
+                    tags: masterItem ? (masterItem.itemTags || []) : []
+                };
+            }
+            itemStats[item.itemId].qty += item.quantity;
+            itemStats[item.itemId].revenue += lineRev;
+        });
+        dailyStats[dateKey].revenue += orderRev;
+        totalRev += orderRev;
+    });
+
+    let itemsArray = Object.values(itemStats);
+
+    if (tagFilterInput) {
+        const tagId = parseInt(tagFilterInput);
+        itemsArray = itemsArray.filter(i => i.tags.some(t => t.tagId === tagId));
+    }
+
+    itemsArray.sort((a, b) => {
+        if (analyticsSortCol === 'name') {
+            return analyticsSortDesc ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name);
+        } else if (analyticsSortCol === 'qty') {
+            return analyticsSortDesc ? b.qty - a.qty : a.qty - b.qty;
+        } else {
+            return analyticsSortDesc ? b.revenue - a.revenue : a.revenue - b.revenue;
+        }
+    });
+
+    document.getElementById("kpiTotalRevenue").innerText = `$${totalRev.toFixed(2)}`;
+    document.getElementById("kpiTotalOrders").innerText = totalOrd;
+    
+    let topItemName = "-";
+    if (itemsArray.length > 0) {
+        let sortedByQty = [...itemsArray].sort((a,b) => b.qty - a.qty);
+        topItemName = sortedByQty[0].name;
+    }
+    document.getElementById("kpiTopItem").innerText = topItemName;
+
+    const tbodyItems = document.querySelector("#itemPerformanceTable tbody");
+    if(tbodyItems) {
+        tbodyItems.innerHTML = "";
+        itemsArray.forEach(i => {
+            tbodyItems.innerHTML += `
+                <tr>
+                    <td>${i.name}</td>
+                    <td>${i.qty}</td>
+                    <td>$${i.revenue.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+    }
+
+    const tbodyDaily = document.querySelector("#dailySalesTable tbody");
+    if(tbodyDaily) {
+        tbodyDaily.innerHTML = "";
+        const dailyKeys = Object.keys(dailyStats).sort((a,b) => b.localeCompare(a));
+        dailyKeys.forEach(k => {
+            tbodyDaily.innerHTML += `
+                <tr>
+                    <td>${k}</td>
+                    <td>${dailyStats[k].orders}</td>
+                    <td>$${dailyStats[k].revenue.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+    }
+}
+window.renderAnalytics = renderAnalytics;
+
+function exportAnalyticsCSV() {
+    const tbodyItems = document.querySelectorAll("#itemPerformanceTable tbody tr");
+    let csvContent = "data:text/csv;charset=utf-8,Item Name,Times Ordered,Revenue\n";
+    tbodyItems.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        const name = cols[0].innerText.replace(/,/g, "");
+        const qty = cols[1].innerText;
+        const rev = cols[2].innerText.replace("$", "");
+        csvContent += `${name},${qty},${rev}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "item_performance_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+window.exportAnalyticsCSV = exportAnalyticsCSV;

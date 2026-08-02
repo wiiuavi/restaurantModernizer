@@ -274,3 +274,78 @@ body {
     gap: 4px;
     margin-top: 4px;
 }
+.tagConfigColumns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+@media (min-width: 768px) {
+    .tagConfigColumns {
+        grid-template-columns: 1fr 1.2fr;
+    }
+}
+.tagInspectionPanel {
+    background: var(--backgroundColor);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--borderColor);
+}
+.kpiGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+.kpiCard {
+    background: var(--surfaceColor);
+    border: 1px solid var(--borderColor);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.kpiValue {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primaryColor);
+    margin-bottom: 5px;
+}
+.kpiLabel {
+    font-size: 0.9rem;
+    color: var(--textColor);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.analyticsTablesGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+@media (min-width: 992px) {
+    .analyticsTablesGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+.dataTable th, .dataTable td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--borderColor);
+}
+.dataTable th {
+    background-color: var(--backgroundColor);
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+}
+.dataTable th:hover {
+    background-color: var(--borderColor);
+}
+.dataTable tr:hover {
+    background-color: #fcfcfc;
+}

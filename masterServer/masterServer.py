@@ -278,6 +278,15 @@ def completeOrder(orderId: int):
     dbConn.close()
     return {"status": "success"}
 
+@app.put("/api/order/{orderId}/completePos", dependencies=[Depends(requireAdmin)])
+def completeOrderPos(orderId: int):
+    dbConn = getDbConnection()
+    dbCursor = dbConn.cursor()
+    dbCursor.execute("UPDATE Orders SET orderStatus = 'Completed' WHERE orderId = ?", (orderId,))
+    dbConn.commit()
+    dbConn.close()
+    return {"status": "success"}
+
 @app.post("/api/item", dependencies=[Depends(requireAdmin)])
 def createMenuItem(itemData: NewItemData):
     dbConn = getDbConnection()
@@ -311,10 +320,23 @@ def deleteMenuItem(itemId: int):
     return {"status": "success"}
 
 @app.get("/api/orders/all/{restaurantId}", dependencies=[Depends(requireAdmin)])
-def getAllOrders(restaurantId: int):
+def getAllOrders(restaurantId: int, startDate: Optional[str] = None, endDate: Optional[str] = None):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
-    dbCursor.execute("SELECT * FROM Orders WHERE restaurantId = ? ORDER BY orderId DESC", (restaurantId,))
+    
+    query = "SELECT * FROM Orders WHERE restaurantId = ?"
+    params = [restaurantId]
+    
+    if startDate:
+        query += " AND orderTime >= ?"
+        params.append(startDate)
+    if endDate:
+        query += " AND orderTime <= ?"
+        params.append(endDate + "T23:59:59")
+        
+    query += " ORDER BY orderId DESC"
+    dbCursor.execute(query, tuple(params))
+    
     allOrders = dbCursor.fetchall()
     formattedOrders = []
     for orderRow in allOrders:
@@ -403,5 +425,3 @@ if __name__ == "__main__":
     hostIp = os.getenv("HOST_IP", "0.0.0.0")
     portNum = int(os.getenv("PORT", "8000"))
     uvicorn.run("masterServer:app", host=hostIp, port=portNum, reload=True)
-
-#uvicorn masterServer:app --reload

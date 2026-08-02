@@ -42,6 +42,7 @@
                 <button class="actionBtn outlineBtn tabBtn" id="tab_menuManagementSection" onclick="switchTab('menuManagementSection')">Menu Editor</button>
                 <button class="actionBtn outlineBtn tabBtn" id="tab_tagManagementSection" onclick="switchTab('tagManagementSection')">Tag Editor</button>
                 <button class="actionBtn outlineBtn tabBtn" id="tab_historicalOrdersSection" onclick="switchTab('historicalOrdersSection')">Order Logs</button>
+                <button class="actionBtn outlineBtn tabBtn" id="tab_analyticsSection" onclick="switchTab('analyticsSection')">Data & Analytics</button>
             </div>
         </header>
 
@@ -112,6 +113,81 @@
             <section class="managementSection hiddenView" id="historicalOrdersSection">
                 <h2>System Order Logs</h2>
                 <div id="managementOrdersContainer">Loading master order logs...</div>
+            </section>
+
+            <section class="managementSection hiddenView" id="analyticsSection">
+                <h2>Data & Analytics</h2>
+                <div class="formBox" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: bold;">Start Date:</label>
+                        <input type="date" id="analyticsStartDate" class="formInput" style="margin: 0; width: auto;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: bold;">End Date:</label>
+                        <input type="date" id="analyticsEndDate" class="formInput" style="margin: 0; width: auto;">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: bold;">Filter by Tag:</label>
+                        <select id="analyticsTagFilter" class="formInput" style="margin: 0; width: auto;">
+                            <option value="">All Tags</option>
+                        </select>
+                    </div>
+                    <div style="margin-top: 18px;">
+                        <button class="actionBtn blueBtn" onclick="loadAllHistoricalOrders()">Apply Filters</button>
+                        <button class="actionBtn outlineBtn" onclick="resetAnalyticsFilters()">All Time</button>
+                    </div>
+                    <div style="margin-top: 18px; margin-left: auto;">
+                        <button class="actionBtn greenBtn" onclick="exportAnalyticsCSV()">Export CSV</button>
+                    </div>
+                </div>
+
+                <div class="kpiGrid">
+                    <div class="kpiCard">
+                        <div id="kpiTotalRevenue" class="kpiValue">$0.00</div>
+                        <div class="kpiLabel">Total Revenue</div>
+                    </div>
+                    <div class="kpiCard">
+                        <div id="kpiTotalOrders" class="kpiValue">0</div>
+                        <div class="kpiLabel">Total Orders</div>
+                    </div>
+                    <div class="kpiCard">
+                        <div id="kpiTopItem" class="kpiValue">-</div>
+                        <div class="kpiLabel">Top Item</div>
+                    </div>
+                </div>
+
+                <div class="analyticsTablesGrid">
+                    <div class="formBox">
+                        <h3>Item Performance</h3>
+                        <div style="overflow-x: auto;">
+                            <table class="dataTable" id="itemPerformanceTable">
+                                <thead>
+                                    <tr>
+                                        <th onclick="sortAnalytics('name')">Item Name ↕</th>
+                                        <th onclick="sortAnalytics('qty')">Times Ordered ↕</th>
+                                        <th onclick="sortAnalytics('revenue')">Revenue ↕</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="formBox">
+                        <h3>Daily Sales</h3>
+                        <div style="overflow-x: auto;">
+                            <table class="dataTable" id="dailySalesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Orders</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </section>
         </div>
     </div>
