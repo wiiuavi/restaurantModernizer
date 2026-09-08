@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("restaurantName").innerText = config.restaurantName;
             document.title = config.restaurantName;
             demoMode = config.demoMode === true;
+            if (demoMode) {
+                document.getElementById("demoNotesMessage").classList.remove("hiddenView");
+            }
             updateCartUI();
         })
         .catch(err => console.error(err));

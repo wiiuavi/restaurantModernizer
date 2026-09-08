@@ -204,6 +204,11 @@ body {
 .hiddenView {
     display: none !important;
 }
+.demoNotesMessage {
+    color: var(--mutedTextColor);
+    font-size: 0.9rem;
+    margin: 0 0 12px;
+}
 .itemPrice {
     font-weight: bold;
     color: var(--secondaryColor);
