@@ -26,6 +26,8 @@ function loadManagementConfig() {
                 document.getElementById("tagEditorBox").classList.add("hiddenView");
                 document.getElementById("manualItemNotes").classList.add("hiddenView");
                 document.getElementById("demoManualNotesMessage").classList.remove("hiddenView");
+                document.getElementById("demoMenuReadOnlyMessage").classList.remove("hiddenView");
+                document.getElementById("demoTagReadOnlyMessage").classList.remove("hiddenView");
             }
             renderMenuControlList();
             renderTagsControlList();

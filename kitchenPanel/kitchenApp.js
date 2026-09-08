@@ -5,17 +5,25 @@ const apiBaseUrl = "/api";
 let activeChefAuth = "";
 let demoMode = false;
 
-fetch(`${apiBaseUrl}/config`)
-    .then(res => res.json())
-    .then(config => {
-        demoMode = config.demoMode === true;
-        document.title = config.restaurantName;
-        if (demoMode) {
-            document.getElementById("demoModeHint").classList.remove("hiddenView");
-            document.getElementById("menuDrawerToggleButton").classList.add("hiddenView");
-        }
-    })
-    .catch(err => console.error(err));
+function loadKitchenConfig() {
+    fetch(`${apiBaseUrl}/config`)
+        .then(res => res.json())
+        .then(config => {
+            demoMode = config.demoMode === true;
+            document.title = config.restaurantName;
+            if (demoMode) {
+                document.getElementById("demoModeHint").classList.remove("hiddenView");
+                document.getElementById("menuDrawerToggleButton").classList.add("hiddenView");
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", loadKitchenConfig);
+} else {
+    loadKitchenConfig();
+}
 
 function verifyKitchenPassword() {
     const attemptedPin = document.getElementById("kitchenPasswordInput").value;

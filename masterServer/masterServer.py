@@ -249,8 +249,6 @@ def updateMenuItem(itemId: int, updateData: ItemUpdateData):
 
 @app.post("/api/order")
 def placeNewOrder(orderData: NewOrderData):
-    if demoMode and any(item.specialNotes and item.specialNotes.strip() for item in orderData.orderedItems):
-        raise HTTPException(status_code=403, detail="Order notes are unavailable in demo mode.")
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
     currentTime = datetime.now().isoformat()
@@ -262,7 +260,7 @@ def placeNewOrder(orderData: NewOrderData):
     for item in orderData.orderedItems:
         dbCursor.execute(
             "INSERT INTO OrderItems (orderId, itemId, quantity, specialNotes, isCooked) VALUES (?, ?, ?, ?, 0)",
-            (newOrderId, item.itemId, item.quantity, item.specialNotes)
+            (newOrderId, item.itemId, item.quantity, "" if demoMode else item.specialNotes)
         )
     dbConn.commit()
     dbConn.close()

@@ -10,7 +10,7 @@
     <div id="passwordOverlay" class="passwordOverlay">
         <div class="loginBox">
             <h2>Management Authentication</h2>
-            <input type="password" id="managementPasswordInput" class="managementPasswordInput" placeholder="Enter PIN...">
+            <input type="password" id="managementPasswordInput" class="managementPasswordInput" placeholder="Enter PIN..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); verifyManagementPassword(); }">
             <p id="demoModeHint" class="demoModeHint hiddenView">hint, the password is demo</p>
             <button class="actionBtn blueBtn" onclick="verifyManagementPassword()">Access POS</button>
             <p id="errorMessage" class="errorMessage"></p>
@@ -79,6 +79,7 @@
 
             <section class="managementSection hiddenView" id="menuManagementSection">
                 <h2>Menu Database Editor</h2>
+                <p id="demoMenuReadOnlyMessage" class="demoModeHint hiddenView">read only in demo mode</p>
                 <div class="formBox" id="itemEditorBox">
                     <h3 id="editorTitle">Create New Item</h3>
                     <input type="hidden" id="editingItemId" value=""> 
@@ -102,6 +103,7 @@
 
             <section class="managementSection hiddenView" id="tagManagementSection">
                 <h2>Menu Tags Database</h2>
+                <p id="demoTagReadOnlyMessage" class="demoModeHint hiddenView">read only in demo mode</p>
                 <div class="formBox" id="tagEditorBox">
                     <h3>Create New Tag</h3>
                     <input type="text" id="newTagName" placeholder="Tag Name (e.g. Vegetarian)" class="formInput">
@@ -204,6 +206,6 @@
             </section>
         </div>
     </div>
-    <script src="managementApp.js"></script>
+    <script src="managementApp.js?v=2"></script>
 </body>
 </html>
