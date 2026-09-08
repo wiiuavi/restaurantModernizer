@@ -11,6 +11,7 @@
         <div class="loginBox">
             <h2>Kitchen Authentication</h2>
             <input type="password" id="kitchenPasswordInput" class="kitchenPasswordInput" placeholder="Enter password...">
+            <p id="demoModeHint" class="demoModeHint hiddenView">hint, the password is demo</p>
             <button class="actionBtn greenBtn" onclick="verifyKitchenPassword()">Unlock KDS</button>
             <p id="errorMessage" class="errorMessage"></p>
         </div>
@@ -19,7 +20,7 @@
     <div id="kitchenDashboardContent" class="hiddenView">
         <header class="kitchenHeader">
             <h1>Kitchen Display System</h1>
-            <button class="actionBtn blueBtn" onclick="toggleMenuDrawer()">Toggle Menu Availability</button>
+            <button id="menuDrawerToggleButton" class="actionBtn blueBtn" onclick="toggleMenuDrawer()">Toggle Menu Availability</button>
         </header>
 
         <div id="menuDrawer" class="menuDrawer hiddenView">

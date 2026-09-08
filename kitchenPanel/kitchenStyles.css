@@ -49,6 +49,10 @@ font-weight: bold;
 }
 .hiddenView { display: none !important;
 }
+.demoModeHint { color: #f1c40f;
+font-size: 0.85rem;
+margin: -5px 0 10px;
+}
 .kitchenHeader { display: flex;
 justify-content: space-between;
 align-items: center;

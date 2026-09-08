@@ -3,6 +3,19 @@ const restaurantId = parseInt(urlParams.get('restaurantId')) || 1;
 const apiBaseUrl = "/api";
 
 let activeChefAuth = "";
+let demoMode = false;
+
+fetch(`${apiBaseUrl}/config`)
+    .then(res => res.json())
+    .then(config => {
+        demoMode = config.demoMode === true;
+        document.title = config.restaurantName;
+        if (demoMode) {
+            document.getElementById("demoModeHint").classList.remove("hiddenView");
+            document.getElementById("menuDrawerToggleButton").classList.add("hiddenView");
+        }
+    })
+    .catch(err => console.error(err));
 
 function verifyKitchenPassword() {
     const attemptedPin = document.getElementById("kitchenPasswordInput").value;
@@ -30,6 +43,7 @@ function toggleMenuDrawer() {
 window.toggleMenuDrawer = toggleMenuDrawer;
 
 function loadMenuDrawer() {
+    if (demoMode) return;
     fetch(`${apiBaseUrl}/menu/${restaurantId}`)
         .then(res => res.json())
         .then(items => {
@@ -49,6 +63,7 @@ function loadMenuDrawer() {
 }
 
 function toggleItemStock(itemId, currentStock) {
+    if (demoMode) return;
     fetch(`${apiBaseUrl}/item/${itemId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "adminAuth": activeChefAuth },

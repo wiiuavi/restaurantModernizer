@@ -19,21 +19,22 @@ body {
 }
 .topNavBar {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     background-color: var(--surfaceColor);
-    padding: 15px 20px;
+    height: 56px;
+    padding: 4px 20px;
+    box-sizing: border-box;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 20px;
 }
-.navLogoPlaceholder {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: var(--primaryColor);
-}
-.navRestaurantName {
-    font-weight: bold;
-    font-size: 1.2rem;
+.navLogo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(70vw, 420px);
+    max-height: 40px;
+    object-fit: contain;
 }
 .menuHeader {
     text-align: center;

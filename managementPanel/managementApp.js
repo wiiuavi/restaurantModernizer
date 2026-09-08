@@ -9,9 +9,29 @@ let localManualCart = [];
 let globalOrdersList = [];
 let activeEditOrderId = null;
 let activeInspectedTagId = null;
+let demoMode = false;
 
 let analyticsSortCol = 'revenue';
 let analyticsSortDesc = true;
+
+function loadManagementConfig() {
+    fetch(`${apiBaseUrl}/config`)
+        .then(res => res.json())
+        .then(config => {
+            demoMode = config.demoMode === true;
+            document.title = config.restaurantName;
+            if (demoMode) {
+                document.getElementById("demoModeHint").classList.remove("hiddenView");
+                document.getElementById("itemEditorBox").classList.add("hiddenView");
+                document.getElementById("tagEditorBox").classList.add("hiddenView");
+                document.getElementById("manualItemNotes").classList.add("hiddenView");
+            }
+            renderMenuControlList();
+            renderTagsControlList();
+        })
+        .catch(err => console.error(err));
+}
+loadManagementConfig();
 
 function verifyManagementPassword() {
     const attemptedPin = document.getElementById("managementPasswordInput").value;
@@ -37,7 +57,7 @@ function verifyManagementPassword() {
 window.verifyManagementPassword = verifyManagementPassword;
 
 function switchTab(sectionId) {
-    const sections = ['posTillSection', 'menuManagementSection', 'tagManagementSection', 'historicalOrdersSection', 'analyticsSection'];
+    const sections = ['posTillSection', 'menuManagementSection', 'tagManagementSection', 'historicalOrdersSection', 'analyticsSection', 'qrGeneratorSection'];
     sections.forEach(id => {
         const sec = document.getElementById(id);
         if(sec) sec.classList.add('hiddenView');
@@ -106,16 +126,19 @@ function renderTagsControlList() {
         const row = document.createElement("div");
         row.className = "databaseRow";
         row.style.cursor = "pointer";
-        row.onclick = (e) => {
-            if(e.target.tagName !== "BUTTON") {
-                inspectTag(tag.tagId);
-            }
-        };
+        if (!demoMode) {
+            row.onclick = (e) => {
+                if(e.target.tagName !== "BUTTON") {
+                    inspectTag(tag.tagId);
+                }
+            };
+        }
+        const tagActionHtml = demoMode ? "" : `<button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteTag(${tag.tagId})">Delete</button>`;
         row.innerHTML = `
             <div>
                 <strong>${renderTagIcon(tag.tagIcon)} ${tag.tagName}</strong>
             </div>
-            <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteTag(${tag.tagId})">Delete</button>
+            ${tagActionHtml}
         `;
         container.appendChild(row);
     });
@@ -159,6 +182,9 @@ function renderMenuControlList() {
             tagsHtml += "</div>";
         }
 
+        const itemActionsHtml = demoMode ? "" : `
+            <button class="actionBtn blueBtn" style="padding:5px;" onclick="loadItemIntoEditor(${item.itemId})">Edit</button>
+            <button class="actionBtn redBtn" style="padding:5px;" onclick="completelyPurgeItem(${item.itemId})">Delete</button>`;
         row.innerHTML = `
             <div class="itemDetails">
                 <strong>${item.itemName}</strong>
@@ -167,8 +193,7 @@ function renderMenuControlList() {
                 ${tagsHtml}
             </div>
             <div style="display:flex; gap:5px; flex-direction:column;">
-                <button class="actionBtn blueBtn" style="padding:5px;" onclick="loadItemIntoEditor(${item.itemId})">Edit</button>
-                <button class="actionBtn redBtn" style="padding:5px;" onclick="completelyPurgeItem(${item.itemId})">Delete</button>
+                ${itemActionsHtml}
             </div>
         `;
         container.appendChild(row);
@@ -176,6 +201,7 @@ function renderMenuControlList() {
 }
 
 function loadItemIntoEditor(itemId) {
+    if (demoMode) return;
     const item = masterMenuArray.find(i => i.itemId === itemId);
     if (!item) return;
 
@@ -215,6 +241,7 @@ function resetItemForm() {
 window.resetItemForm = resetItemForm;
 
 function submitItemForm() {
+    if (demoMode) return;
     const editId = document.getElementById("editingItemId").value;
     const nameInput = document.getElementById("itemNameInput").value;
     const priceInput = parseFloat(document.getElementById("itemPriceInput").value) || null;
@@ -262,6 +289,7 @@ function submitItemForm() {
 window.submitItemForm = submitItemForm;
 
 function completelyPurgeItem(itemId) {
+    if (demoMode) return;
     if (!confirm("Delete this item?")) return;
     fetch(`${apiBaseUrl}/item/${itemId}`, { 
         method: "DELETE",
@@ -271,6 +299,7 @@ function completelyPurgeItem(itemId) {
 window.completelyPurgeItem = completelyPurgeItem;
 
 function submitNewTag() {
+    if (demoMode) return;
     const tagName = document.getElementById("newTagName").value.trim();
     const tagIcon = document.getElementById("newTagIcon").value.trim();
     if (!tagName) return alert("Please specify a tag name.");
@@ -297,6 +326,7 @@ function submitNewTag() {
 window.submitNewTag = submitNewTag;
 
 function deleteTag(tagId) {
+    if (demoMode) return;
     if (!confirm("Are you sure you want to delete this tag? All item assignments will be removed.")) return;
     fetch(`${apiBaseUrl}/tag/${tagId}`, {
         method: "DELETE",
@@ -314,6 +344,7 @@ function deleteTag(tagId) {
 window.deleteTag = deleteTag;
 
 function inspectTag(tagId) {
+    if (demoMode) return;
     activeInspectedTagId = tagId;
     const tag = masterTagsArray.find(t => t.tagId === tagId);
     if (!tag) return;
@@ -365,6 +396,7 @@ function closeTagModal() {
 window.closeTagModal = closeTagModal;
 
 function submitItemTagAssignment() {
+    if (demoMode) return;
     const select = document.getElementById("tagAssignItemSelector");
     const itemId = parseInt(select.value);
     if(!itemId || !activeInspectedTagId) return;
@@ -382,6 +414,7 @@ function submitItemTagAssignment() {
 window.submitItemTagAssignment = submitItemTagAssignment;
 
 function submitItemTagRemoval(itemId, tagId) {
+    if (demoMode) return;
     fetch(`${apiBaseUrl}/itemtag/remove?itemId=${itemId}&tagId=${tagId}`, {
         method: "POST",
         headers: { "adminAuth": activeAdminAuth }
@@ -442,7 +475,7 @@ function addSelectedToManualCart() {
         itemName: matchedItem.itemName,
         price: matchedItem.price,
         quantity: parseInt(quantityInput.value) || 1,
-        specialNotes: notesInput.value
+        specialNotes: demoMode ? "" : notesInput.value
     });
 
     notesInput.value = "";
@@ -465,6 +498,7 @@ function updateManualCartUI() {
     localManualCart.forEach((item, index) => {
         const lineTotal = item.price * item.quantity;
         total += lineTotal;
+        const notesHtml = demoMode ? "" : `<input type="text" class="formInput" style="flex: 1; margin: 0; padding: 10px; font-size: 1rem;" placeholder="Add notes..." value="${item.specialNotes || ''}" onchange="updateCartItemNote(${index}, this.value)">`;
         html += `
         <div style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 10px; margin-bottom: 10px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
@@ -477,7 +511,7 @@ function updateManualCartUI() {
                     <span class="qtyLabel">${item.quantity}</span>
                     <button class="qtyAdjustBtn" onclick="modifyManualCartQuantity(${index}, 1)">+</button>
                 </div>
-                <input type="text" class="formInput" style="flex: 1; margin: 0; padding: 10px; font-size: 1rem;" placeholder="Add notes..." value="${item.specialNotes || ''}" onchange="updateCartItemNote(${index}, this.value)">
+                ${notesHtml}
             </div>
         </div>`;
     });
@@ -496,6 +530,7 @@ function modifyManualCartQuantity(index, amount) {
 window.modifyManualCartQuantity = modifyManualCartQuantity;
 
 function updateCartItemNote(index, newNoteText) {
+    if (demoMode) return;
     localManualCart[index].specialNotes = newNoteText;
 }
 window.updateCartItemNote = updateCartItemNote;
@@ -507,6 +542,7 @@ function removeFromManualCart(index) {
 window.removeFromManualCart = removeFromManualCart;
 
 function submitManualCartAsOrder() {
+    if (demoMode && activeEditOrderId) return;
     const tableInput = document.getElementById("manualTableNum");
     const tableNum = parseInt(tableInput.value);
 
@@ -521,7 +557,7 @@ function submitManualCartAsOrder() {
         orderedItems: localManualCart.map(item => ({
             itemId: item.itemId,
             quantity: item.quantity,
-            specialNotes: item.specialNotes
+            specialNotes: demoMode ? "" : item.specialNotes
         }))
     };
 
@@ -599,6 +635,10 @@ function renderAllOrdersList(allOrders) {
             completeBtnHtml = `<button class="actionBtn greenBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="markOrderCompletePos(${order.orderId})">Complete</button>`;
         }
 
+        const orderActionHtml = demoMode ? "" : `
+                <button class="actionBtn blueBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="loadOrderIntoEditor(${order.orderId})">Edit</button>
+                <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="cancelAndPurgeOrder(${order.orderId})">Void</button>`;
+
         card.innerHTML = `
             <div class="orderTitleRow">
                 <span>Order #${order.orderId} (Table ${order.tableNum})</span>
@@ -607,8 +647,7 @@ function renderAllOrdersList(allOrders) {
             <div style="margin-bottom: 12px;">${linesHtml}</div>
             <div style="display:flex; gap:10px;">
                 ${completeBtnHtml}
-                <button class="actionBtn blueBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="loadOrderIntoEditor(${order.orderId})">Edit</button>
-                <button class="actionBtn redBtn" style="padding:4px 8px; font-size:0.8rem;" onclick="cancelAndPurgeOrder(${order.orderId})">Void</button>
+                ${orderActionHtml}
             </div>
         `;
         container.appendChild(card);
@@ -624,6 +663,7 @@ function markOrderCompletePos(orderId) {
 window.markOrderCompletePos = markOrderCompletePos;
 
 function cancelAndPurgeOrder(orderId) {
+    if (demoMode) return;
     if (!confirm("Void this transaction entirely?")) return;
     fetch(`${apiBaseUrl}/order/${orderId}`, { 
         method: "DELETE",
@@ -633,6 +673,7 @@ function cancelAndPurgeOrder(orderId) {
 window.cancelAndPurgeOrder = cancelAndPurgeOrder;
 
 function loadOrderIntoEditor(orderId) {
+    if (demoMode) return;
     const targetOrder = globalOrdersList.find(o => o.orderId === orderId);
     if (!targetOrder) return;
     
@@ -821,3 +862,16 @@ function exportAnalyticsCSV() {
     document.body.removeChild(link);
 }
 window.exportAnalyticsCSV = exportAnalyticsCSV;
+
+function generateQrPdf() {
+    const tableCountInput = document.getElementById("qrTableCountInput");
+    const baseUrlInput = document.getElementById("qrBaseUrlInput");
+    const tableCount = parseInt(tableCountInput.value) || 1;
+    let baseUrl = baseUrlInput.value.trim();
+    if (!baseUrl) {
+        baseUrl = `${window.location.origin}/menu/?restaurantId=${restaurantId}&tableNum=`;
+    }
+    const targetPdfUrl = `${apiBaseUrl}/qr/pdf?restaurantId=${restaurantId}&tableCount=${tableCount}&baseUrl=${encodeURIComponent(baseUrl)}`;
+    window.open(targetPdfUrl, "_blank");
+}
+window.generateQrPdf = generateQrPdf;

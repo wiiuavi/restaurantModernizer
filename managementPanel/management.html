@@ -11,6 +11,7 @@
         <div class="loginBox">
             <h2>Management Authentication</h2>
             <input type="password" id="managementPasswordInput" class="managementPasswordInput" placeholder="Enter PIN...">
+            <p id="demoModeHint" class="demoModeHint hiddenView">hint, the password is demo</p>
             <button class="actionBtn blueBtn" onclick="verifyManagementPassword()">Access POS</button>
             <p id="errorMessage" class="errorMessage"></p>
         </div>
@@ -43,11 +44,11 @@
                 <button class="actionBtn outlineBtn tabBtn" id="tab_tagManagementSection" onclick="switchTab('tagManagementSection')">Tag Editor</button>
                 <button class="actionBtn outlineBtn tabBtn" id="tab_historicalOrdersSection" onclick="switchTab('historicalOrdersSection')">Order Logs</button>
                 <button class="actionBtn outlineBtn tabBtn" id="tab_analyticsSection" onclick="switchTab('analyticsSection')">Data & Analytics</button>
+                <button class="actionBtn outlineBtn tabBtn" id="tab_qrGeneratorSection" onclick="switchTab('qrGeneratorSection')">QR Generator</button>
             </div>
         </header>
 
         <div class="managementGrid">
-            
             <section class="managementSection" id="posTillSection">
                 <h2 id="tillSectionTitle">Active Till / Ring-Up</h2>
                 <div class="formBox">
@@ -100,7 +101,7 @@
 
             <section class="managementSection hiddenView" id="tagManagementSection">
                 <h2>Menu Tags Database</h2>
-                <div class="formBox">
+                <div class="formBox" id="tagEditorBox">
                     <h3>Create New Tag</h3>
                     <input type="text" id="newTagName" placeholder="Tag Name (e.g. Vegetarian)" class="formInput">
                     <input type="text" id="newTagIcon" placeholder="Image URL (Optional Icon)" class="formInput">
@@ -187,6 +188,17 @@
                             </table>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section class="managementSection hiddenView" id="qrGeneratorSection">
+                <h2>Table QR Code PDF Generator</h2>
+                <div class="formBox">
+                    <label style="font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 6px;">Total Table Count:</label>
+                    <input type="number" id="qrTableCountInput" min="1" max="500" value="10" placeholder="Number of Tables" class="formInput">
+                    <label style="font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 6px;">Base Menu URL (Optional Override):</label>
+                    <input type="text" id="qrBaseUrlInput" placeholder="Auto-generated if left empty" class="formInput">
+                    <button class="actionBtn greenBtn fullWidth" style="margin-top: 10px;" onclick="generateQrPdf()">Generate & Open QR Code PDF</button>
                 </div>
             </section>
         </div>

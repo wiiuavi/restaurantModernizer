@@ -1,0 +1,42 @@
+:root {
+    --primaryColor: #0275d8;
+    --primaryHover: #025aa5;
+    --secondaryColor: #5cb85c;
+    --secondaryHover: #4cae4c;
+    --dangerColor: #d9534f;
+    --backgroundColor: #f9f9f9;
+    --surfaceColor: #ffffff;
+    --textColor: #333333;
+    --mutedTextColor: #666666;
+    --borderColor: #e0e0e0;
+}
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0 0 20px 0;
+    background-color: var(--backgroundColor);
+    color: var(--textColor);
+}
+.topNavBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--surfaceColor);
+    padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.navLogoPlaceholder {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--primaryColor);
+}
+.footer {
+    background-color: var(--backgroundColor);
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    border-top: 1px solid var(--borderColor);
+    position: absolute;
+    width: 100%
+}

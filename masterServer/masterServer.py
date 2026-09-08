@@ -1,18 +1,30 @@
 import sqlite3
 import os
+import io
+import shutil
+import tempfile
 from datetime import datetime
+import atexit
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path="../.env")
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
 
-adminPin = os.getenv("ADMIN_PIN", "admin123")
-chefPin = os.getenv("CHEF_PIN", "chef123")
+load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
+
+demoMode = os.getenv("DEMO_MODE", "false").strip().lower() in {"1", "true", "yes", "on"}
+adminPin = "demo" if demoMode else os.getenv("ADMIN_PIN", "admin123")
+chefPin = "demo" if demoMode else os.getenv("CHEF_PIN", "chef123")
 restaurantName = os.getenv("RESTAURANT_NAME", "MicroSaaS Menu")
+if demoMode:
+    restaurantName = f"{restaurantName} (DEMO MODE)"
 themePrimary = os.getenv("THEME_PRIMARY", "#0275d8")
 themeSecondary = os.getenv("THEME_SECONDARY", "#5cb85c")
 themeBackground = os.getenv("THEME_BACKGROUND", "#f9f9f9")
@@ -27,11 +39,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-dbName = "masterMenuDatabase.db"
+dbPath = BASE_DIR / "masterMenuDatabase.db"
+runtimeDbPath = dbPath
+
+def ensureRuntimeDbPath():
+    global runtimeDbPath
+    try:
+        testConn = sqlite3.connect(str(dbPath), timeout=10.0)
+        testConn.execute("CREATE TABLE IF NOT EXISTS __sqlite_write_probe (id INTEGER)")
+        testConn.execute("DROP TABLE __sqlite_write_probe")
+        testConn.rollback()
+        testConn.close()
+        runtimeDbPath = dbPath
+    except sqlite3.OperationalError:
+        tempDbFolder = Path(tempfile.gettempdir()) / "restaurantModernizer"
+        tempDbFolder.mkdir(parents=True, exist_ok=True)
+        runtimeDbPath = tempDbFolder / dbPath.name
+        if dbPath.exists() and not runtimeDbPath.exists():
+            shutil.copy2(dbPath, runtimeDbPath)
+
+def syncRuntimeDbBack():
+    if runtimeDbPath != dbPath and runtimeDbPath.exists():
+        try:
+            shutil.copy2(runtimeDbPath, dbPath)
+        except PermissionError:
+            pass
+
+ensureRuntimeDbPath()
+atexit.register(syncRuntimeDbBack)
 
 def getDbConnection():
-    dbConn = sqlite3.connect(dbName, timeout=10.0)
-    dbConn.execute("PRAGMA journal_mode=WAL;")
+    dbConn = sqlite3.connect(str(runtimeDbPath), timeout=10.0)
+    try:
+        dbConn.execute("PRAGMA journal_mode=WAL;")
+    except sqlite3.OperationalError:
+        pass
     dbConn.row_factory = sqlite3.Row
     return dbConn
 
@@ -102,6 +144,10 @@ def requireChef(chefAuth: str = Header(None)):
     if chefAuth != chefPin:
         raise HTTPException(status_code=401)
 
+def requireEditableMode():
+    if demoMode:
+        raise HTTPException(status_code=403, detail="This action is unavailable in demo mode.")
+
 class ItemUpdateData(BaseModel):
     itemName: Optional[str] = None
     itemDesc: Optional[str] = None
@@ -119,7 +165,7 @@ class NewOrderData(BaseModel):
     restaurantId: int
     tableNum: int
     orderedItems: List[OrderItemData]
-    
+
 class NewItemData(BaseModel):
     restaurantId: int
     itemName: str
@@ -143,7 +189,8 @@ def getPublicConfig():
         "restaurantName": restaurantName,
         "themePrimary": themePrimary,
         "themeSecondary": themeSecondary,
-        "themeBackground": themeBackground
+        "themeBackground": themeBackground,
+        "demoMode": demoMode
     }
 
 @app.get("/api/auth/admin", dependencies=[Depends(requireAdmin)])
@@ -174,7 +221,7 @@ def getMenu(restaurantId: int):
     dbConn.close()
     return itemsList
 
-@app.put("/api/item/{itemId}", dependencies=[Depends(requireAdmin)])
+@app.put("/api/item/{itemId}", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def updateMenuItem(itemId: int, updateData: ItemUpdateData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -202,6 +249,8 @@ def updateMenuItem(itemId: int, updateData: ItemUpdateData):
 
 @app.post("/api/order")
 def placeNewOrder(orderData: NewOrderData):
+    if demoMode and any(item.specialNotes and item.specialNotes.strip() for item in orderData.orderedItems):
+        raise HTTPException(status_code=403, detail="Order notes are unavailable in demo mode.")
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
     currentTime = datetime.now().isoformat()
@@ -219,7 +268,7 @@ def placeNewOrder(orderData: NewOrderData):
     dbConn.close()
     return {"status": "success", "orderId": newOrderId}
 
-@app.put("/api/order/{orderId}", dependencies=[Depends(requireAdmin)])
+@app.put("/api/order/{orderId}", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def updateExistingOrder(orderId: int, updateData: NewOrderData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -256,6 +305,9 @@ def getOrderQueue(restaurantId: int):
         )
         itemsInOrder = dbCursor.fetchall()
         orderDict["items"] = [dict(item) for item in itemsInOrder]
+        if demoMode:
+            for item in orderDict["items"]:
+                item["specialNotes"] = ""
         formattedQueue.append(orderDict)
     dbConn.close()
     return formattedQueue
@@ -287,7 +339,7 @@ def completeOrderPos(orderId: int):
     dbConn.close()
     return {"status": "success"}
 
-@app.post("/api/item", dependencies=[Depends(requireAdmin)])
+@app.post("/api/item", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def createMenuItem(itemData: NewItemData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -309,7 +361,7 @@ def createMenuItem(itemData: NewItemData):
     dbConn.close()
     return {"status": "success", "itemId": newItemId}
 
-@app.delete("/api/item/{itemId}", dependencies=[Depends(requireAdmin)])
+@app.delete("/api/item/{itemId}", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def deleteMenuItem(itemId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -352,11 +404,14 @@ def getAllOrders(restaurantId: int, startDate: Optional[str] = None, endDate: Op
         )
         itemsInOrder = dbCursor.fetchall()
         orderDict["items"] = [dict(item) for item in itemsInOrder]
+        if demoMode:
+            for item in orderDict["items"]:
+                item["specialNotes"] = ""
         formattedOrders.append(orderDict)
     dbConn.close()
     return formattedOrders
 
-@app.delete("/api/order/{orderId}", dependencies=[Depends(requireAdmin)])
+@app.delete("/api/order/{orderId}", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def deleteOrder(orderId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -375,7 +430,7 @@ def getTags(restaurantId: int):
     dbConn.close()
     return [dict(row) for row in tagRows]
 
-@app.post("/api/tag", dependencies=[Depends(requireAdmin)])
+@app.post("/api/tag", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def createTag(tagData: NewTagData):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -388,7 +443,7 @@ def createTag(tagData: NewTagData):
     dbConn.close()
     return {"status": "success", "tagId": newTagId}
 
-@app.delete("/api/tag/{tagId}", dependencies=[Depends(requireAdmin)])
+@app.delete("/api/tag/{tagId}", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def deleteTag(tagId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -398,7 +453,7 @@ def deleteTag(tagId: int):
     dbConn.close()
     return {"status": "success"}
 
-@app.post("/api/itemtag/assign", dependencies=[Depends(requireAdmin)])
+@app.post("/api/itemtag/assign", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def assignItemTag(itemId: int, tagId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -407,7 +462,7 @@ def assignItemTag(itemId: int, tagId: int):
     dbConn.close()
     return {"status": "success"}
 
-@app.post("/api/itemtag/remove", dependencies=[Depends(requireAdmin)])
+@app.post("/api/itemtag/remove", dependencies=[Depends(requireAdmin), Depends(requireEditableMode)])
 def removeItemTag(itemId: int, tagId: int):
     dbConn = getDbConnection()
     dbCursor = dbConn.cursor()
@@ -416,12 +471,131 @@ def removeItemTag(itemId: int, tagId: int):
     dbConn.close()
     return {"status": "success"}
 
-app.mount("/menu", StaticFiles(directory="../customerPanel", html=True), name="customer")
-app.mount("/kitchen", StaticFiles(directory="../kitchenPanel", html=True), name="kitchen")
-app.mount("/management", StaticFiles(directory="../managementPanel", html=True), name="management")
+@app.get("/api/qr/pdf")
+def generateQrPdf(restaurantId: int = 1, tableCount: int = 10, baseUrl: Optional[str] = None):
+    if tableCount < 1:
+        tableCount = 1
+    if not baseUrl or baseUrl.strip() == "":
+        baseUrl = f"http://localhost:8000/menu/?restaurantId={restaurantId}&tableNum="
+
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
+        from reportlab.graphics.shapes import Drawing
+        from reportlab.graphics.barcode import qr
+        from reportlab.graphics import renderPDF
+        from reportlab.lib import colors
+
+        pdfBuffer = io.BytesIO()
+        pdfCanvas = canvas.Canvas(pdfBuffer, pagesize=letter)
+        pageWidth, pageHeight = letter
+
+        for currentTable in range(1, tableCount + 1):
+            if "tableNum=" in baseUrl:
+                tableUrl = f"{baseUrl}{currentTable}"
+            elif baseUrl.endswith("/"):
+                tableUrl = f"{baseUrl}?restaurantId={restaurantId}&tableNum={currentTable}"
+            else:
+                tableUrl = f"{baseUrl}&tableNum={currentTable}"
+
+            pdfCanvas.setFillColor(colors.HexColor(themePrimary if themePrimary else "#0275d8"))
+            pdfCanvas.rect(0, pageHeight - 90, pageWidth, 90, fill=True, stroke=False)
+            
+            pdfCanvas.setFillColor(colors.white)
+            pdfCanvas.setFont("Helvetica-Bold", 26)
+            pdfCanvas.drawCentredString(pageWidth / 2, pageHeight - 55, restaurantName)
+
+            pdfCanvas.setFillColor(colors.HexColor("#2c3e50"))
+            pdfCanvas.setFont("Helvetica-Bold", 38)
+            pdfCanvas.drawCentredString(pageWidth / 2, pageHeight - 170, f"Table {currentTable}")
+
+            pdfCanvas.setFont("Helvetica", 16)
+            pdfCanvas.setFillColor(colors.HexColor("#7f8c8d"))
+            pdfCanvas.drawCentredString(pageWidth / 2, pageHeight - 210, "Scan QR Code to View Menu & Order")
+
+            qrWidget = qr.QrCodeWidget(tableUrl)
+            bounds = qrWidget.getBounds()
+            w = bounds[2] - bounds[0]
+            h = bounds[3] - bounds[1]
+            qrSize = 280
+            drawing = Drawing(qrSize, qrSize, transform=[qrSize / w, 0, 0, qrSize / h, 0, 0])
+            drawing.add(qrWidget)
+
+            renderPDF.draw(drawing, pdfCanvas, (pageWidth - qrSize) / 2, pageHeight - 520)
+
+            pdfCanvas.setFont("Helvetica-Oblique", 12)
+            pdfCanvas.setFillColor(colors.HexColor("#95a5a6"))
+            pdfCanvas.drawCentredString(pageWidth / 2, 90, f"Table #{currentTable} • {restaurantName}")
+            pdfCanvas.drawCentredString(pageWidth / 2, 70, f"Page {currentTable} of {tableCount}")
+
+            pdfCanvas.showPage()
+
+        pdfCanvas.save()
+        pdfBuffer.seek(0)
+        return Response(content=pdfBuffer.getvalue(), media_type="application/pdf", headers={"Content-Disposition": "inline; filename=table_qr_codes.pdf"})
+    except Exception as pdfError:
+        htmlContent = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Table QR Codes Print View</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f6f9; }}
+        .page {{ width: 100vw; height: 100vh; page-break-after: always; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; padding: 40px; text-align: center; background: #fff; }}
+        .header {{ background: {themePrimary}; color: white; width: 100%; padding: 25px 0; font-size: 32px; font-weight: bold; margin-bottom: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+        .tableName {{ font-size: 54px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }}
+        .subTitle {{ font-size: 22px; color: #7f8c8d; margin-bottom: 40px; }}
+        canvas {{ margin: 20px 0; border: 12px solid #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 12px; }}
+        .footer {{ font-size: 16px; color: #95a5a6; margin-top: 40px; font-style: italic; }}
+        @media print {{ body {{ background: none; }} .page {{ page-break-after: always; height: 100vh; box-shadow: none; padding: 0; }} }}
+    </style>
+</head>
+<body>
+    <div id="pagesContainer"></div>
+    <script>
+        const tableCount = {tableCount};
+        const baseUrl = "{baseUrl}";
+        const restaurantId = {restaurantId};
+        const container = document.getElementById("pagesContainer");
+
+        for (let i = 1; i <= tableCount; i++) {{
+            let url = baseUrl;
+            if (url.includes("tableNum=")) {{
+                url += i;
+            }} else if (url.endsWith("/")) {{
+                url += "?restaurantId=" + restaurantId + "&tableNum=" + i;
+            }} else {{
+                url += "&tableNum=" + i;
+            }}
+
+            const pageDiv = document.createElement("div");
+            pageDiv.className = "page";
+            pageDiv.innerHTML = `
+                <div class="header">{restaurantName}</div>
+                <div class="tableName">Table ${{i}}</div>
+                <div class="subTitle">Scan QR Code to View Menu & Order</div>
+                <canvas id="qrCanvas_${{i}}"></canvas>
+                <div class="footer">Table #${{i}} • Page ${{i}} of ${{tableCount}}</div>
+            `;
+            container.appendChild(pageDiv);
+
+            setTimeout(() => {{
+                QRCode.toCanvas(document.getElementById(`qrCanvas_${{i}}`), url, {{ width: 300, margin: 2 }}, function (error) {{
+                    if (error) console.error(error);
+                }});
+            }}, 50);
+        }}
+    </script>
+</body>
+</html>"""
+        return Response(content=htmlContent, media_type="text/html")
+
+app.mount("/menu", StaticFiles(directory=PROJECT_ROOT / "customerPanel", html=True), name="customer")
+app.mount("/kitchen", StaticFiles(directory=PROJECT_ROOT / "kitchenPanel", html=True), name="kitchen")
+app.mount("/management", StaticFiles(directory=PROJECT_ROOT / "managementPanel", html=True), name="management")
 
 if __name__ == "__main__":
     import uvicorn
     hostIp = os.getenv("HOST_IP", "0.0.0.0")
     portNum = int(os.getenv("PORT", "8000"))
-    uvicorn.run("masterServer:app", host=hostIp, port=portNum, reload=True)
+    uvicorn.run(app, host=hostIp, port=portNum)

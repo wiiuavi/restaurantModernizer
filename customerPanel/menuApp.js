@@ -6,6 +6,7 @@ let shoppingCart = [];
 let masterMenuArray = [];
 let masterTagsArray = [];
 let activeFilterTagId = null;
+let demoMode = false;
 
 function renderTagIcon(url) {
     return url ? `<img src="${url}" class="tagIconImg" alt="tag">` : '';
@@ -21,7 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
             document.documentElement.style.setProperty('--secondaryColor', config.themeSecondary);
             document.documentElement.style.setProperty('--backgroundColor', config.themeBackground);
             document.getElementById("restaurantName").innerText = config.restaurantName;
-            document.getElementById("navRestaurantName").innerText = config.restaurantName;
+            document.title = config.restaurantName;
+            demoMode = config.demoMode === true;
+            updateCartUI();
         })
         .catch(err => console.error(err));
 
@@ -174,7 +177,7 @@ function updateCartUI() {
                         <span class="qtyLabel">${item.quantity}</span>
                         <button class="qtyAdjustBtn" onclick="modifyCartQuantity(${index}, 1)">+</button>
                     </div>
-                    <input type="text" class="cartInput" style="flex: 1;" placeholder="Add notes..." value="${item.specialNotes}" onchange="updateCartNotes(${index}, this.value)">
+                    ${demoMode ? '' : `<input type="text" class="cartInput" style="flex: 1;" placeholder="Add notes..." value="${item.specialNotes}" onchange="updateCartNotes(${index}, this.value)">`}
                 </div>
             </div>`;
     });
@@ -191,6 +194,7 @@ function modifyCartQuantity(index, amount) {
 window.modifyCartQuantity = modifyCartQuantity;
 
 function updateCartNotes(index, newNote) {
+    if (demoMode) return;
     shoppingCart[index].specialNotes = newNote;
     updateCartUI();
 }
@@ -204,7 +208,14 @@ window.removeCartItem = removeCartItem;
 
 function sendOrderToServer() {
     if(!shoppingCart.length) return alert("Cart empty");
-    const payload = { restaurantId, tableNum, orderedItems: shoppingCart };
+    const payload = {
+        restaurantId,
+        tableNum,
+        orderedItems: shoppingCart.map(item => ({
+            ...item,
+            specialNotes: demoMode ? "" : item.specialNotes
+        }))
+    };
 
     fetch(`${apiBaseUrl}/order`, {
         method: "POST",
