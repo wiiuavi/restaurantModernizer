@@ -39,11 +39,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-dbPath = BASE_DIR / "masterMenuDatabase.db"
+configuredDatabaseName = os.getenv("DATABASE_NAME", "masterMenuDatabase.db").strip()
+configuredDatabasePath = Path(configuredDatabaseName)
+dbPath = configuredDatabasePath if configuredDatabasePath.is_absolute() else BASE_DIR / configuredDatabasePath
 runtimeDbPath = dbPath
 
 def ensureRuntimeDbPath():
     global runtimeDbPath
+    dbPath.parent.mkdir(parents=True, exist_ok=True)
     try:
         testConn = sqlite3.connect(str(dbPath), timeout=10.0)
         testConn.execute("CREATE TABLE IF NOT EXISTS __sqlite_write_probe (id INTEGER)")

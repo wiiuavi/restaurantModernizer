@@ -1,0 +1,34 @@
+services:
+  restaurant1:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      HOST_IP: "0.0.0.0"
+      PORT: "8000"
+      DATABASE_NAME: "/app/data/masterMenuDatabase.db"
+      DEMO_MODE: "false"
+      ADMIN_PIN: "admin123"
+      CHEF_PIN: "chef123"
+      RESTAURANT_NAME: "Restaurant 1"
+    volumes:
+      - restaurant1_data:/app/data
+
+  restaurant2:
+    build: .
+    ports:
+      - "8002:8000"
+    environment:
+      HOST_IP: "0.0.0.0"
+      PORT: "8000"
+      DATABASE_NAME: "/app/data/masterMenuDatabase.db"
+      DEMO_MODE: "false"
+      ADMIN_PIN: "admin123"
+      CHEF_PIN: "chef123"
+      RESTAURANT_NAME: "Restaurant 2"
+    volumes:
+      - restaurant2_data:/app/data
+
+volumes:
+  restaurant1_data:
+  restaurant2_data:
