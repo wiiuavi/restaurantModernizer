@@ -1,14 +1,14 @@
 :root {
-    --primaryColor: #0275d8;
-    --primaryHover: #025aa5;
-    --secondaryColor: #5cb85c;
-    --secondaryHover: #4cae4c;
+    --primaryColor: #42aef5;
+    --primaryHover: #8ed4ff;
+    --secondaryColor: #6fd29d;
+    --secondaryHover: #9ee7be;
     --dangerColor: #d9534f;
-    --backgroundColor: #f9f9f9;
-    --surfaceColor: #ffffff;
-    --textColor: #333333;
-    --mutedTextColor: #666666;
-    --borderColor: #e0e0e0;
+    --backgroundColor: #111417;
+    --surfaceColor: #161c21;
+    --textColor: #edf7ff;
+    --mutedTextColor: #90a4b4;
+    --borderColor: #2c414e;
 }
 body {
     font-family: Arial, sans-serif;

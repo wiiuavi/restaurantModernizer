@@ -25,9 +25,9 @@ chefPin = "demo" if demoMode else os.getenv("CHEF_PIN", "chef123")
 restaurantName = os.getenv("RESTAURANT_NAME", "MicroSaaS Menu")
 if demoMode:
     restaurantName = f"{restaurantName} (DEMO MODE)"
-themePrimary = os.getenv("THEME_PRIMARY", "#0275d8")
-themeSecondary = os.getenv("THEME_SECONDARY", "#5cb85c")
-themeBackground = os.getenv("THEME_BACKGROUND", "#f9f9f9")
+themePrimary = os.getenv("THEME_PRIMARY", "#42aef5")
+themeSecondary = os.getenv("THEME_SECONDARY", "#6fd29d")
+themeBackground = os.getenv("THEME_BACKGROUND", "#111417")
 
 app = FastAPI()
 

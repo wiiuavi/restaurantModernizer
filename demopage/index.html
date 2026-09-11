@@ -1,19 +1,140 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu demo</title>
+    <meta name="description" content="Restaurant Modernizer panel demo">
+    <title>Restaurant Modernizer</title>
+    <link rel="icon" type="image/png" href="icon.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <nav class="topNavBar">
-        <div class="navLogoPlaceholder">LOGO</div>
-        <div class="navRestaurantName" id="navRestaurantName">Loading...</div>
-    </nav>
+    <div class="page-shell">
+        <header class="site-header">
+            <a class="brand" href="#top" aria-label="Restaurant Modernizer home">
+                <img class="brand-icon" src="icon.png" alt="">
+                <span>Restaurant Modernizer</span>
+            </a>
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="#panels">Panels</a>
+                <a href="#about">About</a>
+                <a class="github-link" href="https://github.com/wiiuavi/restaurantModernizer" target="_blank" rel="noreferrer">
+                    <img src="github-logo.png" alt="">
+                    <span>GitHub</span>
+                    <span class="arrow">↗</span>
+                </a>
+            </nav>
+        </header>
 
+        <main id="top">
+            <section class="hero reveal-section">
+                <div class="hero-copy">
+                    <p class="eyebrow">Restaurant tools, simplified.</p>
+                    <h1>Everything your restaurant needs. All in <span>one place.</span></h1>
+                    <p class="hero-description">This project lets you host your own restaraunt order ticket menu, letting users specify their needs, almost instantly fed to the kitchen, and almost every aspect in your control!</p>
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="#panels">Explore panels <span>↓</span></a>
+                        <a class="button button-ghost" href="https://github.com/wiiuavi/restaurantModernizer" target="_blank" rel="noreferrer">View on GitHub <span>↗</span></a>
+                    </div>
+                </div>
+                <div class="hero-preview reveal-section">
+                    <div class="preview-glow"></div>
+                    <div class="menu-slideshow" aria-label="Menu slideshow">
+                        <div class="slideshow-track">
+                            <figure class="menu-slide is-active" data-label="menu-image.png">
+                                <img src="menu-image.png" alt="Menu preview">
+                            </figure>
+                            <figure class="menu-slide" data-label="menu-image-2.png">
+                                <img src="menu-image-2.png" alt="Menu preview">
+                            </figure>
+                            <figure class="menu-slide" data-label="menu-image-3.png">
+                                <img src="menu-image-3.png" alt="Menu preview">
+                            </figure>
+                        </div>
+                        <button class="slide-control slide-previous" type="button" aria-label="Previous menu image">←</button>
+                        <button class="slide-control slide-next" type="button" aria-label="Next menu image">→</button>
+                        <div class="slide-dots" aria-label="Choose menu image">
+                            <button class="slide-dot is-active" type="button" aria-label="Show menu image 1"></button>
+                            <button class="slide-dot" type="button" aria-label="Show menu image 2"></button>
+                            <button class="slide-dot" type="button" aria-label="Show menu image 3"></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
+            <section class="panels-section" id="panels">
+                <div class="section-heading reveal-section">
+                    <p class="eyebrow">Three views. One system.</p>
+                    <h2>Built for every part of service.</h2>
+                    <p>desc</p>
+                </div>
 
-    <footer class="footer">
-    <p>&copy; 2026 <a href="https://wiiuavi.vercel.app/">WiiUavi's</a> RestarauntModernizer, </p>
-    </footer>
+                <div class="panel-grid">
+                    <article class="panel-card reveal-section">
+                        <div class="asset-frame">
+                            <img src="menu-image.png" alt="Customer menu preview">
+                            <span class="asset-placeholder">menu-image.png</span>
+                            <span class="asset-label">01 / customer</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-heading">
+                                <span class="card-number">01</span>
+                                <h3>Customer menu</h3>
+                            </div>
+                            <p>This is where customers make their orders! centered  for mobile useage, clear prices, descriptions, images and full page control, all optional and ready to deploy!</p>
+                            <a class="text-link" href="/menu/?restaurantId=1&tableNum=1">Open menu <span>↗</span></a>
+                        </div>
+                    </article>
+
+                    <article class="panel-card reveal-section">
+                        <div class="asset-frame">
+                            <img src="kitchen-image.png" alt="Kitchen display preview">
+                            <span class="asset-placeholder">kitchen-image.png</span>
+                            <span class="asset-label">02 / kitchen</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-heading">
+                                <span class="card-number">02</span>
+                                <h3>Kitchen display</h3>
+                            </div>
+                            <p>Simple. A dashboard to show orders, their notes, with functionality to track progress and priorites in the kitchen.</p>
+                            <a class="text-link" href="/kitchen/?restaurantId=1">Open kitchen <span>↗</span></a>
+                        </div>
+                    </article>
+
+                    <article class="panel-card reveal-section">
+                        <div class="asset-frame">
+                            <img src="management-image.png" alt="Management panel preview">
+                            <span class="asset-placeholder">management-image.png</span>
+                            <span class="asset-label">03 / management</span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-heading">
+                                <span class="card-number">03</span>
+                                <h3>Management panel</h3>
+                            </div>
+                            <p>The master control! Add/remove/edit items, item  tags, orders, prices (easy discounts/price rises), and stats dashboard for insights!</p>
+                            <a class="text-link" href="/management/?restaurantId=1">Open management <span>↗</span></a>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="about-section reveal-section" id="about">
+                <div>
+                    <p class="eyebrow">Open source focus</p>
+                    <h2>Make it yours.</h2>
+                </div>
+                <p>Easy to customize to your need. Support for everyone's needs.</p>
+                <a class="button button-primary" href="https://github.com/wiiuavi/restaurantModernizer" target="_blank" rel="noreferrer">Explore the code <span>↗</span></a>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <span>Restaurant Modernizer</span>
+            <span>© <span id="currentYear"></span> WiiUavi</span>
+        </footer>
+    </div>
+    <script src="script.js"></script>
 </body>
+</html>
