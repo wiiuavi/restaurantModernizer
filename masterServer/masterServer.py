@@ -7,7 +7,7 @@ from datetime import datetime
 import atexit
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Header, Depends
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
@@ -591,9 +591,18 @@ def generateQrPdf(restaurantId: int = 1, tableCount: int = 10, baseUrl: Optional
 </html>"""
         return Response(content=htmlContent, media_type="text/html")
 
+@app.get("/kitchen/")
+def getKitchenPanel():
+    return FileResponse(PROJECT_ROOT / "kitchenPanel" / "kitchen.html")
+
+@app.get("/management/")
+def getManagementPanel():
+    return FileResponse(PROJECT_ROOT / "managementPanel" / "management.html")
+
 app.mount("/menu", StaticFiles(directory=PROJECT_ROOT / "customerPanel", html=True), name="customer")
 app.mount("/kitchen", StaticFiles(directory=PROJECT_ROOT / "kitchenPanel", html=True), name="kitchen")
 app.mount("/management", StaticFiles(directory=PROJECT_ROOT / "managementPanel", html=True), name="management")
+app.mount("/demo", StaticFiles(directory=PROJECT_ROOT / "demopage", html=True), name="demo")
 
 if __name__ == "__main__":
     import uvicorn
