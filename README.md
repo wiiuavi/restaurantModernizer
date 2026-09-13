@@ -117,6 +117,6 @@
 
 ~~ Misc
 
-All work done by me, AI was used for code completions, debugging and heavy influence on the docker compose file. The soup icon is the *beetroot soup* asset from minecraft.
+All work done by me, AI was used for code completions, debugging and heavy influence on the docker compose file. The soup icon is the *beetroot soup* asset from minecraft. W marktext for making writing md way too easy
 
 Demo hosted at `http://79.72.72.162/demo/` on an oracle VPS. 
