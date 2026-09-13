@@ -1,4 +1,6 @@
 const yearElement = document.getElementById("currentYear");
+const assetVersion = "20260913-1";
+const assetUrl = (filename) => `${filename}?v=${assetVersion}`;
 if (yearElement) {
     yearElement.textContent = new Date().getFullYear();
 }
@@ -9,7 +11,7 @@ const panelsData = [
         number: "01",
         description: "This is where customers make their orders! centered for mobile useage, clear prices, descriptions, images and full page control, all optional and ready to deploy!",
         url: "/menu/?restaurantId=1&tableNum=1",
-        image: "menu-image.png",
+        image: assetUrl("menu-image.png"),
         linkText: "Open menu ↗",
         shadowColor: "rgba(66, 174, 245, 0.4)"
     },
@@ -18,7 +20,7 @@ const panelsData = [
         number: "02",
         description: "Simple. A dashboard to show orders, their notes, with functionality to track progress and priorites in the kitchen.",
         url: "/kitchen/?restaurantId=1",
-        image: "kitchen-image.png",
+        image: assetUrl("kitchen-image.png"),
         linkText: "Open kitchen ↗",
         shadowColor: "rgba(243, 126, 157, 0.4)"
     },
@@ -27,7 +29,7 @@ const panelsData = [
         number: "03",
         description: "The master control! Add/remove/edit items, item tags, orders, prices (easy discounts/price rises), and stats dashboard for insights!",
         url: "/management/?restaurantId=1",
-        image: "management-image.png",
+        image: assetUrl("management-image.png"),
         linkText: "Open management ↗",
         shadowColor: "rgba(142, 212, 255, 0.4)"
     }
@@ -56,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const heroImages = ['menu-image.png', 'menu-image-2.png', 'menu-image-3.png']; 
+    const heroImages = [assetUrl('menu-image.png'), assetUrl('menu-image-2.png'), assetUrl('menu-image-3.png')];
     const slideshowContainer = document.getElementById('hero-slideshow');
     
     if (slideshowContainer) {
